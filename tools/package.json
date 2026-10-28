@@ -1,0 +1,13 @@
+{
+  "name": "frankfurt-falls-tests",
+  "private": true,
+  "description": "Headless Playwright checks for Frankfurt Falls",
+  "scripts": {
+    "build": "bash build-test.sh && bash build-index.sh",
+    "test": "bash build-test.sh && node boot.js && node menus.js && node run.js && node mobile.js"
+  },
+  "dependencies": {
+    "playwright": "^1.63.0",
+    "three": "0.147.0"
+  }
+}
