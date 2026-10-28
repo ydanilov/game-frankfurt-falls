@@ -12,6 +12,8 @@ const IMGS = ['ff_title', 'ff_shop', 'ff_comic1', 'ff_comic2', 'ff_comic3', 'ff_
   for (const n of IMGS) check(reqs.has(n), `requested ${n}.webp`);
   const art = await page.evaluate(() => window.__ff.ART);
   check(Object.values(art).every(s => s === 'ready'), 'all art loaded: ' + JSON.stringify(art));
+  await page.waitForFunction(() => window.__ff.sky().st[0] === 'ready', null, { timeout: 30000 }).catch(() => {});
+  check(await page.evaluate(() => window.__ff.sky().st[0] === 'ready'), 'floor 1 sky panorama loaded at boot');
   check(await page.evaluate(() => document.getElementById('bg-title').classList.contains('on')), 'title backdrop on');
   check(await page.evaluate(() => window.__ff.drawMode()) === 'logo', 'canvas draws only the logo over title art');
   check(await page.evaluate(() => localStorage.getItem('frankfurtFalls.save') !== undefined && typeof window.__ff.loadBridge === 'function'), 'debug hooks present');
@@ -28,6 +30,9 @@ const IMGS = ['ff_title', 'ff_shop', 'ff_comic1', 'ff_comic2', 'ff_comic3', 'ff_
   await m.page.waitForFunction(() => window.__ff.ART.title === 'failed', null, { timeout: 30000, polling: 250 });
   await m.page.waitForTimeout(800);
   check(await m.page.evaluate(() => window.__ff.drawMode()) === 'world', 'missing art -> full 3D title scene');
+  await m.page.waitForFunction(() => window.__ff.sky().st[0] === 'failed', null, { timeout: 30000 }).catch(() => {});
+  const fsk = await m.page.evaluate(() => window.__ff.sky());
+  check(fsk.st[0] === 'failed' && fsk.w === 0 && fsk.fog === fsk.flat.toLowerCase() && fsk.bg === fsk.flat.toLowerCase(), 'missing sky image -> flat floor colour sky + fog (' + fsk.fog + ')');
   await shot(m.page, 'boot_fallback_noart');
   await m.page.evaluate(() => { window.__ff.save.seenComic = true; window.__ff.startGame(); }); await m.page.waitForFunction(() => window.__ff.S.state === 'play', null, { timeout: 30000 }).catch(() => {});
   const st0 = await m.page.evaluate(() => window.__ff.S.state);

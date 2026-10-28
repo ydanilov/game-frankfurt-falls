@@ -8,13 +8,18 @@ const { serve, launch, open, shot, check, done, VP } = require('./lib');
   for (let i = 0; i < 4; i++) {
     const r = await page.evaluate(i => { const f = window.__ff; f.S.choices = [{ key: 'grease', floor: 0 }, { key: 'dog', floor: 1 }, { key: 'burners', floor: 2 }].slice(0, i); f.loadFloor(i); f.step(600); return { floor: f.S.floor, surfs: f.surfs().length, state: f.S.state, y: f.P.y }; }, i);
     check(r.floor === i && r.surfs > 5 && isFinite(r.y), `floor ${i + 1}: ${r.surfs} surfaces, stepped 5 s (state ${r.state})`);
+    await page.waitForFunction(i => { const s = window.__ff.sky(); return s.k === i && s.st[i] === 'ready' && s.mix >= 1 && s.w > .9; }, i, { timeout: 30000 }).catch(() => {});
+    const sk = await page.evaluate(() => window.__ff.sky());
+    check(sk.k === i && new RegExp('ff_sky' + (i + 1) + '\\.webp').test(sk.img || '') && sk.fog !== sk.flat.toLowerCase(), `floor ${i + 1} uses painted sky ff_sky${i + 1} (fog ${sk.fog})`);
     await page.waitForTimeout(300); await shot(page, `run_floor${i + 1}`);
   }
   for (let i = 0; i < 3; i++) {
     const r = await page.evaluate(i => { const f = window.__ff; f.S.state = 'play'; f.loadBridge(i); f.BR.go = 0; f.step(480);
       const R = f.BR.riv; R.hp = 1; f.step(1); const before = f.BR.over; R.hp = -1; return { name: f.BR.def.name, before, hpF: f.BR.hpF }; }, i);
     check(r.name && isFinite(r.hpF), `bridge ${i + 1} vs ${r.name}: simulated 4 s, Frank hp ${Math.round(r.hpF)}`);
-    await page.evaluate(() => window.__ff.updateOverlays && 0); await page.waitForTimeout(300); await shot(page, `run_bridge${i + 1}`);
+    await page.waitForFunction(i => { const s = window.__ff.sky(); return s.k === i + 1 && s.st[i + 1] === 'ready' && s.mix >= 1; }, i, { timeout: 30000 }).catch(() => {});
+    check(await page.evaluate(i => window.__ff.sky().k === i + 1, i), `bridge ${i + 1} shows the sky of floor ${i + 2}`);
+    await page.waitForTimeout(300); await shot(page, `run_bridge${i + 1}`);
   }
   // bridge win -> next floor transition
   await page.evaluate(() => { const f = window.__ff; f.S.state = 'play'; f.loadBridge(0); f.BR.go = 0; f.S.floor = 0; f.BR.riv.hp = 1; f.step(2); });
