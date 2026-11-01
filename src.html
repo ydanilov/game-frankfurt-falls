@@ -287,6 +287,43 @@ body.touch .wpn{bottom:calc(var(--sb) + 62px);max-width:calc(100% - 236px - var(
   .btn,.ibtn,.tab,.item,.opt{transition:none}
   .btn:hover,.tab:hover,.item:hover,.opt:hover{transform:none}
 }
+/* ---- portraits (assets/ui/ff_p_*.webp): rounded-square ink frame, slight tilt; hidden (.off) if the image fails ---- */
+.pt{display:inline-block;position:relative;flex:none;width:var(--ps,64px);height:var(--ps,64px);border:3px solid var(--ink);border-radius:18px;background:#fbf1dc;box-shadow:0 4px 0 var(--ink);overflow:hidden;transform:rotate(var(--pr,-4deg));box-sizing:border-box}
+.pt img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;opacity:0;transition:opacity .2s}
+.pt.ready img{opacity:1}
+.pt.off{display:none!important}
+.pt.swap{animation:ptpop .34s cubic-bezier(.2,1.6,.4,1)}
+@keyframes ptpop{0%{transform:rotate(var(--pr,-4deg)) scale(.75)}100%{transform:rotate(var(--pr,-4deg)) scale(1)}}
+.dpt{position:absolute;left:14px;top:50%;margin-top:calc(var(--ps) / -2);--ps:96px}
+.dlg:has(.dpt:not(.off)){padding-left:126px}
+.dlg:has(.dpt:not(.off)) .who{left:126px}
+.dfr{position:absolute;right:14px;top:-34px;--ps:58px;--pr:6deg}
+.hudpt{--ps:44px;--pr:-5deg;border-radius:14px;margin:-2px 10px -2px -2px;vertical-align:middle}
+.hud .fcard{display:flex;align-items:center;max-width:100%;box-sizing:border-box}.hud>div:first-child{min-width:0;flex:0 1 auto}.hud .fcard>div{min-width:0}.hud .fcard .floorlbl,.hud .fcard .floorname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ipt{display:block;margin:0 auto 10px;--ps:112px;--pr:-5deg}
+.pop{position:fixed;left:50%;top:calc(var(--st) + 124px);transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:8px 16px 8px 10px;max-width:min(380px,calc(100% - 32px));box-sizing:border-box;pointer-events:none}
+.pop .pt{--ps:52px}
+.pop b{display:block;font-family:var(--display);font-weight:400;font-size:13px;opacity:.75}
+.pop span.tx{display:block;font-family:var(--comic);font-size:20px;letter-spacing:.03em;line-height:1.1}
+.pop.show{animation:popIn .3s cubic-bezier(.2,1.4,.4,1)}
+@keyframes popIn{from{opacity:0;transform:translate(-50%,-14px) scale(.92)}}
+.endpts{display:flex;justify-content:center;gap:10px;margin:-52px 0 8px}
+.endpts .pt{--ps:84px}.endpts .pt+.pt{--pr:5deg}
+@media (max-width:520px){.dpt{--ps:64px;left:10px}.dlg:has(.dpt:not(.off)){padding-left:86px}.dlg:has(.dpt:not(.off)) .who{left:86px}.dfr{--ps:46px;top:-28px}.ipt{--ps:88px}.pop .pt{--ps:44px}.pop span.tx{font-size:17px}.endpts .pt{--ps:68px}.endpts{margin-top:-44px}}
+@media (max-width:420px){.hudpt{--ps:36px;margin-right:8px}.hud .floorname{font-size:12px}.hud.br .floorname{display:none}.hud .fcard .floorlbl{font-size:18px}.hud.br .fcard .floorlbl{font-size:16px;text-overflow:clip}.hud.br .hudpt{--ps:30px;margin-right:6px}}
+@media (orientation:landscape) and (max-height:540px){.dpt{--ps:72px}.dlg:has(.dpt:not(.off)){padding-left:98px}.dlg:has(.dpt:not(.off)) .who{left:98px}.dfr{--ps:44px;top:-26px}.ipt{--ps:72px;margin-bottom:6px}.pop{top:calc(var(--st) + 118px)}.endpts{display:none}}
+/* ---- closet item art (assets/ui/ff_i_*.webp); .fail falls back to the colour swatch ---- */
+.item .ic{position:relative;display:block;height:64px;border:2px solid var(--ink);border-radius:9px;background:#fbf1dc;overflow:hidden}
+.item .ic img{position:absolute;inset:2px;width:calc(100% - 4px);height:calc(100% - 4px);max-width:none;object-fit:contain;transition:transform .15s}
+.item .ic.plain img{filter:saturate(.55) brightness(1.08) contrast(.95)}
+.item .ic.fail{height:22px;background:var(--s)}.item .ic.fail img{display:none}
+.item .ic svg{position:absolute;inset:0;margin:auto;width:46px;height:46px}
+@media (hover:hover){.item:not(.no):hover .ic img{transform:scale(1.08) rotate(-3deg)}}
+.item.no .ic img,.item.no .ic svg.hat{filter:grayscale(1) contrast(.85);opacity:.5}
+.item.no .ic::after{content:"";position:absolute;right:4px;bottom:4px;width:20px;height:22px;background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 22'%3E%3Cpath d='M5 10V7a5 5 0 0 1 10 0v3' fill='none' stroke='%232b1630' stroke-width='3'/%3E%3Crect x='2' y='9' width='16' height='12' rx='3' fill='%23ffc21a' stroke='%232b1630' stroke-width='2.5'/%3E%3Ccircle cx='10' cy='15' r='2' fill='%232b1630'/%3E%3C/svg%3E")}
+.item.no .ic.fail::after{display:none}
+@media (orientation:landscape) and (max-height:540px){.item .ic{height:44px}.item .ic svg{width:34px;height:34px}}
+@media (prefers-reduced-motion:reduce){.pt.swap,.pop.show{animation:none}.pt img,.item .ic img{transition:none}}
 </style>
 
 <div class="bgart" id="bgart" aria-hidden="true">
@@ -299,7 +336,7 @@ body.touch .wpn{bottom:calc(var(--sb) + 62px);max-width:calc(100% - 236px - var(
 
 <div class="hud" id="hud" hidden>
   <div>
-    <div class="card"><div class="floorlbl" id="flbl">Floor 1/4</div><div class="floorname" id="fname">The Greasy Kitchen</div></div>
+    <div class="card fcard"><span class="pt hudpt" id="hpt" aria-hidden="true"><img alt="" decoding="async"></span><div><div class="floorlbl" id="flbl">Floor 1/4</div><div class="floorname" id="fname">The Greasy Kitchen</div></div></div>
     <div class="recipe" id="recipe"></div>
   </div>
   <div class="hudr">
@@ -310,9 +347,11 @@ body.touch .wpn{bottom:calc(var(--sb) + 62px);max-width:calc(100% - 236px - var(
 <div class="boss card" id="bossbar" hidden>CHEF <div class="pips" id="pips"></div></div>
 <div class="meter" id="meter" hidden><i id="mbest"></i><b id="mline"></b><em id="mcur"></em></div>
 <div class="gust" id="gust" hidden>GUST!</div>
-<div class="intro" id="intro" hidden><div class="big" id="ibig">Floor 1</div><div class="card sub" id="isub">The Greasy Kitchen</div><span class="new" id="inew"></span></div>
+<div class="intro" id="intro" hidden><span class="pt ipt off" id="ipt" aria-hidden="true"><img alt="" decoding="async"></span><div class="big" id="ibig">Floor 1</div><div class="card sub" id="isub">The Greasy Kitchen</div><span class="new" id="inew"></span></div>
 
 <div class="dlg card" id="dlg" hidden>
+  <span class="pt dpt off" id="dpt" aria-hidden="true"><img alt="" decoding="async"></span>
+  <span class="pt dfr off" id="dfr" aria-hidden="true"><img alt="" decoding="async"></span>
   <div class="who" id="who">Bunsworth</div>
   <p class="say" id="say"></p>
   <div class="opts" id="opts" hidden>
@@ -364,6 +403,7 @@ body.touch .wpn{bottom:calc(var(--sb) + 62px);max-width:calc(100% - 236px - var(
 
 <div class="overlay" id="end" role="dialog" aria-label="Victory" hidden>
   <div class="panel card">
+    <div class="endpts" aria-hidden="true"><span class="pt" id="ept1"><img alt="" decoding="async"></span><span class="pt" id="ept2"><img alt="" decoding="async"></span></div>
     <h2 class="endh">You beat the Chef!</h2>
     <p class="endp">Frank's buddies are free and nobody went in a bun.</p>
     <div class="statgrid"><div><b id="etime">0:00</b><span>Time</span></div><div><b id="efalls">0</b><span>Falls</span></div><div><b id="ecoins">0</b><span>Coins</span></div></div>
@@ -396,6 +436,7 @@ body.touch .wpn{bottom:calc(var(--sb) + 62px);max-width:calc(100% - 236px - var(
 <div class="vs" id="vs" hidden><div class="hpb"><b>Frank</b><div class="bar"><i id="hpF" style="width:100%"></i></div></div><div class="vsx">VS</div><div class="hpb r"><b id="rname">Rival</b><div class="bar"><i id="hpR" style="width:100%"></i></div></div></div>
 <div class="wpn card" id="wpn" hidden><b><span class="sw" id="wsw"></span><span id="wname">Bun slap</span></b> <span id="wammo"></span><small id="whint">J or R2 shoot · K or △ slap · G or ○ grab crate</small></div>
 <div class="fight" id="fight" hidden>FIGHT!</div>
+<div class="pop card" id="pop" hidden><span class="pt" id="popt" aria-hidden="true"><img alt="" decoding="async"></span><div><b id="popn"></b><span class="tx" id="popx"></span></div></div>
 <div class="fade" id="fade"></div>
 
 <div class="pad" id="pad" hidden>
@@ -964,7 +1005,7 @@ function buildCage(){
 }
 function chefHatTop(){return roof.y+4.75*(1-.64*chef.crouch);}
 function frankOnRoof(){return roof&&P.y>=roof.y-1.6&&Math.hypot(P.x,P.z)<=roof.r+.3;}
-function chefSay(t){floatText(t,0,chefHatTop()+.6,0,'#fff');}
+function chefSay(t){floatText(t,0,chefHatTop()+.6,0,'#fff');popSay('chef','Chef Le Grill',t,2.4);}
 function startAttack(a){const C=chef;C.t=0;
   if(a==='pans'){C.state='pans';C.panLeft=3;C.panT=.3;chefSay(pick(CHEF_TAUNTS));}
   else if(a==='sniper'){C.state='sniper';C.shots=C.phase2?6:4;C.shotT=.9;C.bottle.visible=true;chefSay(pick(['Say KETCHUP!','Hold still... PEW!','Ketchup snipe!']));}
@@ -1182,6 +1223,13 @@ function openShop(){shopReturn=S.state;S.state='shop';if(S.floor!==0)loadFloor(0
 function shopMsg(t,c){const m=$('smsg');m.textContent=t;m.className='shopmsg'+(c?' '+c:'');}
 function tabMsg(){const cat=SHOP[shopTab];if(cat.items.every(it=>save.owned.includes(shopTab+':'+it[0])))shopMsg(`You own every ${cat.label.toLowerCase().replace(/s$/,'')}. Pick one to wear.`,'good');}
 function closeShop(){S.state=shopReturn==='end'?'end':'title';if(S.state==='title')dropLetters();updateOverlays();}
+const ITEMART={hat:['chef','cap','party','tophat','crown','viking'],bun:['sesame','pretzel','rainbow','golden','plain'],skin:['classic','chili','veggie','golden'],trail:['mustard','ketchup','rainbow','confetti']};
+const NOHAT='<svg class="hat" viewBox="0 0 48 48" aria-hidden="true"><path d="M10 33h28M15 33c0-11 4-17 9-17s9 6 9 17" fill="#fff7e8" stroke="#2b1630" stroke-width="3" stroke-linejoin="round"/><circle cx="24" cy="24" r="19" fill="none" stroke="#ef4a32" stroke-width="4"/><path d="M11 37L37 11" stroke="#ef4a32" stroke-width="4" stroke-linecap="round"/></svg>';
+function itemIcon(tab,id,sw){if(tab==='hat'&&id==='none')return `<span class="ic" style="--s:${sw}">${NOHAT}</span>`;
+  if(!(ITEMART[tab]||[]).includes(id))return `<span class="sw" style="--s:${sw}"></span>`;
+  const src='assets/ui/ff_i_'+tab+'_'+(id==='plain'?'sesame':id)+'.webp',bad=UIA[src]==='failed';
+  return `<span class="ic${id==='plain'?' plain':''}${bad?' fail':''}" style="--s:${sw}"><img src="${src}" alt="" decoding="async" loading="lazy" data-ui="${src}"></span>`;}
+addEventListener('error',e=>{const im=e.target;if(im&&im.dataset&&im.dataset.ui){UIA[im.dataset.ui]='failed';const ic=im.parentNode;if(ic)ic.classList.add('fail');}},true);
 function renderShop(){
   const ae=document.activeElement,fk=ae&&ae.dataset?(ae.dataset.id?'.item[data-id="'+ae.dataset.id+'"]':ae.dataset.t?'.tab[data-t="'+ae.dataset.t+'"]':null):null,refocus=fk&&$('shop').contains(ae);
   $('bank').textContent=save.coins;$('bankbox').classList.toggle('zero',save.coins<=0);
@@ -1190,7 +1238,7 @@ function renderShop(){
   $('tabs').querySelectorAll('.tab').forEach(b=>b.onclick=()=>{if(shopTab!==b.dataset.t){shopTab=b.dataset.t;sfx.pick();renderShop();shopMsg('Collect coins on the tower ledges, then dress Frank up.','');tabMsg();}});
   const cat=SHOP[shopTab];
   $('sgrid').innerHTML=cat.items.map(([id,name,price,sw])=>{const own=save.owned.includes(shopTab+':'+id),eq=save.eq[shopTab]===id,st=eq?'eq':own?'own':price>save.coins?'no':'buy';
-    return `<button class="item ${st}" data-id="${id}" aria-pressed="${eq}"${st==='no'?' aria-disabled="true"':''}><span class="sw" style="--s:${sw}"></span><b>${name}</b><small>${eq?'Wearing':own?'Owned · wear it':'<span class="coin"></span>'+price+(st==='no'?' · need '+(price-save.coins):'')}</small></button>`;}).join('');
+    return `<button class="item ${st}" data-id="${id}" aria-pressed="${eq}"${st==='no'?' aria-disabled="true"':''}>${itemIcon(shopTab,id,sw)}<b>${name}</b><small>${eq?'Wearing':own?'Owned · wear it':'<span class="coin"></span>'+price+(st==='no'?' · need '+(price-save.coins):'')}</small></button>`;}).join('');
   $('sgrid').querySelectorAll('.item').forEach(b=>b.onclick=()=>buy(b.dataset.id,b));
   if(refocus){const el=$('shop').querySelector(fk);if(el)el.focus({preventScroll:true});}
 }
@@ -1288,12 +1336,12 @@ function startGame(){if(S.state==='play'||S.state==='trans')return;initAudio();
   if(!save.seenComic){playComic('intro',()=>{S.state='title';startGame();});return;}
   S.choices=[];S.falls=0;S.time=0;S.coins=0;S.state='trans';updateOverlays();
   fadeTo(()=>{loadFloor(0);cam.yaw=.6;snapCam=true;S.state='play';showIntro();updateOverlays();canvas.focus();});}
-function showIntro(){const F=FL[S.floor];$('ibig').textContent=S.floor===3?'Final floor':'Floor '+(S.floor+1);$('isub').textContent=F.name;
+function showIntro(){setPt($('ipt'),S.floor===3?'chef':null);const F=FL[S.floor];$('ibig').textContent=S.floor===3?'Final floor':'Floor '+(S.floor+1);$('isub').textContent=F.name;
   const last=S.choices[S.choices.length-1];$('inew').textContent=last&&S.floor>0?'New hazard: '+HAZ[last.key].label:'';
   const el=$('intro');el.hidden=false;el.classList.remove('show');void el.offsetWidth;el.classList.add('show');clearTimeout(showIntro.t);showIntro.t=setTimeout(()=>{el.hidden=true;},2300);}
 function nextFloor(){S.state='trans';sfx.door();setMood('happy',2);S.coins+=5;save.coins+=5;persist();floatText('+5 coins',P.x,P.y+2.3,P.z,'#ffcc33');updateOverlays();
   setTimeout(()=>fadeTo(()=>{if(S.floor<3&&RIVALS[S.floor]){loadBridge(S.floor);snapCam=true;S.state='play';showBridgeIntro();updateOverlays();setTimeout(()=>{if(BR&&S.state==='play')openDialog('rival');},1600);}else{loadFloor(S.floor+1);snapCam=true;S.state='play';showIntro();updateOverlays();}}),350);}
-function finish(){S.state='end';chargeSound(false);let isBest=false;
+function finish(){S.state='end';setPt($('ept1'),'frank_happy','frank');setPt($('ept2'),'buddies');chargeSound(false);let isBest=false;
   if(save.best==null||S.time<save.best){save.best=S.time;isBest=true;persist();}
   $('etime').textContent=fmt(S.time);$('efalls').textContent=S.falls;$('ecoins').textContent=S.coins;
   $('erecipe').innerHTML=S.choices.map(c=>`<span class="chip" style="--c:${HAZ[c.key].c}">${HAZ[c.key].label}</span>`).join('');
@@ -1318,7 +1366,7 @@ function updateOverlays(){const st=S.state,inGame=st==='play'||st==='dialog'||st
   $('hud').hidden=!inGame;
   showEl($('dlg'),st==='dialog'||(st==='pause'&&S.prev==='dialog'));$('pad').hidden=!(touchMode&&st==='play');
   const boss=inGame&&chef&&chef.state!=='wait';$('bossbar').hidden=!boss;
-  $('vs').hidden=!(inGame&&BR);$('wpn').hidden=!(inGame&&BR);$('meter').hidden=!(st==='play'||st==='trans'||st==='pause')||!!BR;$('grp2').hidden=!BR;
+  $('vs').hidden=!(inGame&&BR);$('wpn').hidden=!(inGame&&BR)||st==='dialog'||(st==='pause'&&S.prev==='dialog');$('meter').hidden=!(st==='play'||st==='trans'||st==='pause')||!!BR;$('grp2').hidden=!BR;
   $('hud').classList.toggle('br',(!!BR||!!boss)&&innerWidth<1100);$('pad').classList.toggle('br',!!BR);
   const bk=BGK[st];['title','shop','victory'].forEach(k=>$('bg-'+k).classList.toggle('on',bk===k));
   ['title','shop','end'].forEach(s=>document.body.classList.toggle('art-'+s,artOK(BGK[s])));
@@ -1331,18 +1379,35 @@ function updateHud(force){const fl=BR?'Bridge '+(BR.i+1)+'/3':S.floor===3?'Final
   if(force||hc.fl!==fl){$('flbl').textContent=fl;$('fname').textContent=BR?'vs '+BR.def.name:FL[S.floor].name;hc.fl=fl;}
   if(force||hc.tm!==tm){$('stime').textContent=tm;hc.tm=tm;}if(force||hc.fa!==fa){$('sfalls').textContent=fa;hc.fa=fa;}if(force||hc.cn!==cn){$('scoins').textContent=cn;hc.cn=cn;}
   if(force||hc.rc!==rc){$('recipe').innerHTML=S.choices.map(c=>`<span class="chip" style="--c:${HAZ[c.key].c}">${HAZ[c.key].label}</span>`).join('');hc.rc=rc;}
+  const fk=frankMoodKey();if(force||hc.fk!==fk){setPt($('hpt'),fk,'frank');hc.fk=fk;}
   const hp=chef?chef.hp:3;if(force||hc.hp!==hp){$('pips').innerHTML=[0,1,2].map(i=>`<span class="pip${i<hp?'':' off'}"></span>`).join('');hc.hp=hp;}
   const top=FL[S.floor].topY,cur=clamp((P.y-base)/top,0,1),best=clamp((P.best-base)/top,0,1);
   $('mbest').style.height=best*100+'%';$('mline').style.bottom=best*100+'%';$('mcur').style.bottom=cur*100+'%';}
 
+/* ---------- portraits + item art (assets/ui) ---------- */
+const UIA={};/* key -> loading | ready | failed */
+const RIVAL_PT=['bratty','kielbasa','wurstula'];
+function setPt(el,k,fb){if(!el)return;if(!k){el.dataset.k='';el.classList.add('off');return;}
+  if(UIA[k]==='failed'){if(fb&&fb!==k)return setPt(el,fb);el.dataset.k='';el.classList.add('off');return;}
+  if(el.dataset.k===k&&!el.classList.contains('off'))return;el.dataset.k=k;el.classList.remove('off');
+  const im=el.querySelector('img');el.classList.toggle('ready',UIA[k]==='ready');
+  if(!RM()){el.classList.remove('swap');void el.offsetWidth;el.classList.add('swap');}
+  im.onload=()=>{UIA[k]='ready';if(el.dataset.k===k)el.classList.add('ready');};
+  im.onerror=()=>{UIA[k]='failed';if(el.dataset.k===k){el.dataset.k='';setPt(el,fb&&fb!==k?fb:null);}};
+  if(UIA[k]!=='ready')UIA[k]='loading';im.src='assets/ui/ff_p_'+k+'.webp';}
+function frankMoodKey(){if(P.stun>0||P.rag>0||P.mood==='dizzy')return 'frank_dizzy';if(P.moodT>0&&P.mood==='happy')return 'frank_happy';if(P.moodT>0&&(P.mood==='angry'||P.mood==='scared'))return 'frank_angry';if(P.charging)return 'frank_angry';return 'frank';}
+const POP={t:0,k:null};
+function popSay(k,name,text,dur){const el=$('pop');setPt($('popt'),k);$('popn').textContent=name;$('popx').textContent=text;
+  if(el.hidden||POP.k!==k){el.hidden=false;if(!RM()){el.classList.remove('show');void el.offsetWidth;el.classList.add('show');}}POP.k=k;POP.t=dur||2.4;}
+function tickPop(dt){if(POP.t>0){POP.t-=dt;if(POP.t<=0||!(S.state==='play'||S.state==='trans'))$('pop').hidden=true;}}
 /* ---------- dialog ---------- */
 const D={phase:'ask',text:'',typed:0,sel:0,pitch:200,who:null};
 function openDialog(kind){S.state='dialog';chargeSound(false);P.charging=false;P.charge=0;P.vx=P.vz=0;D.who=kind;D.typed=0;D.sel=0;
   if(kind==='chef'){D.phase='chef';D.pitch=95;const names=S.choices.map(c=>HAZ[c.key].label.toLowerCase());
     D.text=`Ahh, a fresh frank! You seasoned my tower with ${names.length>1?names.slice(0,-1).join(', ')+' and '+names[names.length-1]:'nothing'}. Magnifique. Your little friends are in ze cage. Now hold still while I find a bun.`;
-    $('who').textContent='Chef Le Grill';$('who').style.setProperty('--wc','#ffffff');}
-  else if(kind==='rival'){const R0=BR.def;D.phase='chef';D.pitch=R0.pitch;D.text=R0.line;$('who').textContent=R0.name;$('who').style.setProperty('--wc',R0.color);}
-  else{D.phase='ask';D.pitch=keeper.pitch;D.text=keeper.q;$('who').textContent=keeper.name;$('who').style.setProperty('--wc',keeper.color);
+    $('who').textContent='Chef Le Grill';$('who').style.setProperty('--wc','#ffffff');setPt($('dpt'),'chef');setPt($('dfr'),'frank_angry','frank');}
+  else if(kind==='rival'){const R0=BR.def;D.phase='chef';D.pitch=R0.pitch;D.text=R0.line;$('who').textContent=R0.name;$('who').style.setProperty('--wc',R0.color);setPt($('dpt'),RIVAL_PT[BR.i]);setPt($('dfr'),'frank_angry','frank');}
+  else{D.phase='ask';D.pitch=keeper.pitch;D.text=keeper.q;$('who').textContent=keeper.name;$('who').style.setProperty('--wc',keeper.color);setPt($('dpt'),keeper.id);setPt($('dfr'),null);
     $('optA').innerHTML=keeper.a.label+'<small>'+keeper.a.note+'</small>';$('optB').innerHTML=keeper.b.label+'<small>'+keeper.b.note+'</small>';}
   $('opts').hidden=true;$('hint').textContent='';$('say').textContent='';updateOverlays();}
 function updateDialog(dt){if(D.typed<D.text.length){const b=Math.floor(D.typed);D.typed=Math.min(D.text.length,D.typed+dt*48);const n=Math.floor(D.typed);
@@ -1356,7 +1421,7 @@ function dialogPress(a){const done=D.typed>=D.text.length;
   else if(a==='jump'||a==='confirm')closeDialog();}
 $('dlg').addEventListener('click',e=>{if(e.target.closest('.opt'))return;if(S.state==='dialog')dialogPress('confirm');});
 function choose(i){if(S.state!=='dialog'||D.phase!=='ask'||D.typed<D.text.length)return;const c=i===0?keeper.a:keeper.b;S.choices.push({key:c.key,floor:S.floor});
-  sfx.pick();D.phase='react';D.text=c.react;D.typed=0;$('opts').hidden=true;$('hint').textContent='';updateHud(true);}
+  sfx.pick();D.phase='react';D.text=c.react;D.typed=0;setPt($('dfr'),'frank_happy','frank');$('opts').hidden=true;$('hint').textContent='';updateHud(true);}
 function closeDialog(){S.state='play';
   if(D.who==='chef'){chef.state='idle';chef.t=0;chef.phase=0;setMood('determined',2);}
   else if(D.who==='rival'){BR.go=-2.4;setMood('determined',2);}
@@ -1549,7 +1614,7 @@ function loadBridge(i){
   placeFrank(-11,Y,zc,0);cam.yaw=0;cam.pitch=.3;cam.look.set(-11,Y+1,zc);
   updateHud(true);updateBridgeHud();
 }
-function showBridgeIntro(){$('ibig').textContent='Bridge '+(BR.i+1);$('isub').textContent='vs '+BR.def.name;$('inew').textContent='Drain the health bar to win';
+function showBridgeIntro(){setPt($('ipt'),RIVAL_PT[BR.i]);$('ibig').textContent='Bridge '+(BR.i+1);$('isub').textContent='vs '+BR.def.name;$('inew').textContent='Drain the health bar to win';
   const el=$('intro');el.hidden=false;el.classList.remove('show');void el.offsetWidth;el.classList.add('show');clearTimeout(showIntro.t);showIntro.t=setTimeout(()=>{el.hidden=true;},2300);}
 function updateBridgeHud(){if(!BR)return;$('hpF').style.width=Math.max(0,BR.hpF)+'%';$('hpR').style.width=Math.max(0,BR.riv.hp/BR.riv.max*100)+'%';$('rname').textContent=BR.def.name;
   const w=BR.wpn;$('wname').textContent=w?WPN[w.type].name:'Bun slap only';$('wsw').style.background=w?WPN[w.type].css:'#f2b366';$('wammo').textContent=w?(WPN[w.type].flame?Math.ceil(w.ammo/WPN[w.type].ammo*100)+'%':'×'+w.ammo):'';}
@@ -1572,9 +1637,9 @@ function bridgeSlap(){if(!BR||BR.over||BR.go<0||BR.slapCd>0||P.rag>0)return;BR.s
 function bridgeGrab(){if(!BR||BR.over)return;let best=null,bd=1.5;for(const c of BR.crates){if(!c.landed)continue;const d=Math.hypot(c.x-P.x,c.z-P.z);if(d<bd){bd=d;best=c;}}
   if(best){BR.wpn={type:best.type,ammo:WPN[best.type].ammo};levelG.remove(best.g);BR.crates.splice(BR.crates.indexOf(best),1);sfx.coin();frankSay(WPN[best.type].name+'!');updateBridgeHud();}}
 function bridgeFall(){BR.hpF-=30;floatText('-30',P.x,base+2,P.z,'#ff9a8a');sfx.plop();frankSay(pick(LAND_GRUMBLE));placeFrank(-11,BR.Y,BR.zc,0);ragdoll(.6);if(BR.hpF<=0)bridgeLose();updateBridgeHud();}
-function bridgeWin(){if(BR.over)return;BR.over='win';BR.endT=0;const R=BR.riv;R.dead=true;R.vy=13;R.vx=6;R.onGround=false;floatText(BR.def.ko,R.x,R.y+2.6,R.z,'#fff');sfx.fanfare();setMood('happy',3);
+function bridgeWin(){if(BR.over)return;BR.over='win';BR.endT=0;const R=BR.riv;R.dead=true;R.vy=13;R.vx=6;R.onGround=false;floatText(BR.def.ko,R.x,R.y+2.6,R.z,'#fff');popSay(RIVAL_PT[BR.i],BR.def.name,BR.def.ko,2.6);sfx.fanfare();setMood('happy',3);
   S.coins+=10;save.coins+=10;persist();setTimeout(()=>floatText('+10 coins',P.x,P.y+2.4,P.z,'#ffcc33'),400);const f=$('fight');f.textContent='K.O.!';f.style.color='#43b649';f.hidden=false;}
-function bridgeLose(){if(BR.over)return;BR.over='lose';BR.endT=0;ragdoll(2);sfx.scream();frankSay('NOOOO!');S.falls++;const f=$('fight');f.textContent='K.O.!';f.style.color='#ef4a32';f.hidden=false;floatText(pick(BR.def.taunts),BR.riv.x,BR.riv.y+2.4,BR.riv.z,'#fff');}
+function bridgeLose(){if(BR.over)return;popSay('frank_dizzy','Frank','Ow... my bun...',2.4);BR.over='lose';BR.endT=0;ragdoll(2);sfx.scream();frankSay('NOOOO!');S.falls++;const f=$('fight');f.textContent='K.O.!';f.style.color='#ef4a32';f.hidden=false;floatText(pick(BR.def.taunts),BR.riv.x,BR.riv.y+2.4,BR.riv.z,'#fff');}
 function stepBridge(dt){
   const R=BR.riv,Y=BR.Y,zc=BR.zc,W=BR.wpn&&WPN[BR.wpn.type];
   BR.fCd-=dt;BR.slapCd-=dt;BR.slapT-=dt;BR.shootT-=dt;BR.fInv-=dt;BR.slowF-=dt;
@@ -1634,7 +1699,7 @@ function stepRival(dt,live){
       else if(d<14){R.wpn.ammo--;R.cd=RW.rate*(2.4-.4*L)+rnd(0,.4);fireProj('R',R.wpn.type,R.x+Math.cos(R.face)*.5,R.y+1.1,R.z+Math.sin(R.face)*.5,P.x+P.vx*.15*L,P.y+.9,P.z);}
       if(R.wpn.ammo<=0)R.wpn=null;}
     if(R.mcd<=0&&Math.hypot(dx,P.z-R.z)<1.4&&Math.abs(P.y-R.y)<1.2){R.mcd=1.3-.2*L;const d=Math.hypot(dx,P.z-R.z)||1;damageFrank(7,dx/d*6,6,(P.z-R.z)/d*6,'slap',true);sfx.bonk();floatText('SLAP!',P.x,P.y+1.6,P.z,'#fff');}
-    if(R.sayT<=0){R.sayT=rnd(4,7);floatText(pick(BR.def.taunts),R.x,R.y+2.4,R.z,'#fff');}
+    if(R.sayT<=0){R.sayT=rnd(4,7);const tt=pick(BR.def.taunts);floatText(tt,R.x,R.y+2.4,R.z,'#fff');popSay(RIVAL_PT[BR.i],BR.def.name,tt,2);}
   }
   if(R.onGround){const k=1-Math.exp(-14*dt);R.vx+=(tvx-R.vx)*k;R.vz+=(tvz-R.vz)*k;}else R.vy-=GRAV*dt;
   const py=R.y;R.x+=R.vx*dt;R.y+=R.vy*dt;R.z+=R.vz*dt;
@@ -1702,7 +1767,7 @@ function frame(now){
     pollPad();mergeInput();
     if(S.state==='play'){acc+=dt;while(acc>=STEP&&S.state==='play'){stepWorld(STEP);acc-=STEP;}if(S.state!=='play')acc=0;updateHud();}
     else{acc=0;jumpEdge=false;worldT+=dt;if(S.state==='dialog')updateDialog(dt);if(P.moodT>0)P.moodT-=dt;}
-    animLetters(dt);if(shake>0)shake-=dt;
+    animLetters(dt);if(shake>0)shake-=dt;tickPop(dt);
     updateNodes(dt);animActors(dt);drawFrank();updateParts(dt);
     const gu=$('gust');if(hz.wind&&S.state==='play'&&(wind.warn>0||wind.on>0)&&outside()){gu.hidden=false;gu.classList.toggle('warn',wind.warn>0);}else gu.hidden=true;
     updateCamera(dt);updateFts(dt);
@@ -1716,7 +1781,7 @@ initArt();loadFloor(0);
 camera.position.set(0,14,60);cam.look.set(0,8,17);
 dropLetters();updateOverlays();
 requestAnimationFrame(t=>{last=t;frame(t);});
-window.__ff={cam,sky:()=>({k:SKY.k,a:SKY.a,b:SKY.b,st:SKY.st.slice(),w:SU.wB.value,mix:SU.mixv.value,img:SU.tB.value&&SU.tB.value.image&&(SU.tB.value.image.src||'canvas'),fog:'#'+scene.fog.color.getHexString(),bg:'#'+skyScene.background.getHexString(),flat:FL[SKY.k].c.sky}),lettersSettled:()=>letters.every(g=>g.userData.off===0&&g.userData.vy===0&&g.userData.delay<=0),ART,drawMode:()=>DM.mode,renderShop,finish,comicNext,get CM(){return CM},S,P,save,loadBridge:i=>loadBridge(i),get BR(){return BR},openDialog,closeDialog,get chef(){return chef},loadFloor,startGame,surfs:()=>surfs,step:n=>{for(let i=0;i<n;i++)stepWorld(STEP);},openShop,playComic};
+window.__ff={UIA,cam,sky:()=>({k:SKY.k,a:SKY.a,b:SKY.b,st:SKY.st.slice(),w:SU.wB.value,mix:SU.mixv.value,img:SU.tB.value&&SU.tB.value.image&&(SU.tB.value.image.src||'canvas'),fog:'#'+scene.fog.color.getHexString(),bg:'#'+skyScene.background.getHexString(),flat:FL[SKY.k].c.sky}),lettersSettled:()=>letters.every(g=>g.userData.off===0&&g.userData.vy===0&&g.userData.delay<=0),ART,drawMode:()=>DM.mode,renderShop,finish,comicNext,get CM(){return CM},S,P,save,loadBridge:i=>loadBridge(i),get BR(){return BR},openDialog,closeDialog,get chef(){return chef},loadFloor,startGame,surfs:()=>surfs,step:n=>{for(let i=0;i<n;i++)stepWorld(STEP);},openShop,playComic};
 })();
 </script>
 

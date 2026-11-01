@@ -2,7 +2,8 @@
 const { serve, launch, open, shot, check, done, VP } = require('./lib');
 const settle = p => p.waitForTimeout(450);
 async function focusRing(page, label) {
-  await page.waitForTimeout(250); // let the .12s box-shadow transition finish
+  // wait (up to 3 s) for the .12s box-shadow transition; software GL can stall the compositor
+  await page.waitForFunction(() => { const a = document.activeElement; return a && a.tagName === 'BUTTON' && /255, 194, 26/.test(getComputedStyle(a).boxShadow); }, null, { timeout: 3000 }).catch(() => {});
   const st = await page.evaluate(() => { const a = document.activeElement; if (!a || a.tagName !== 'BUTTON') return null; const cs = getComputedStyle(a); return { id: a.id || a.className, outline: cs.outlineStyle, ow: parseFloat(cs.outlineWidth), shadow: cs.boxShadow }; });
   check(st && st.outline !== 'none' && st.ow >= 2 && /255, 194, 26/.test(st.shadow), `${label}: visible focus ring on ${st && st.id}`);
 }
@@ -41,6 +42,10 @@ async function flow(b, url, vp, tag) {
   await page.click('.item[data-id="crown"]', { force: true });
   check(await page.evaluate(() => document.querySelector('.item[data-id="crown"]').classList.contains('no') && document.getElementById('smsg').classList.contains('bad') && !window.__ff.save.owned.includes('hat:crown')), 'buying the crown with 0 coins is denied');
   await shot(page, `menu_${tag}_05_shop_denied`);
+  await page.waitForFunction(() => [...document.querySelectorAll('#sgrid .ic img')].every(i => i.complete && i.naturalWidth > 0), null, { timeout: 20000 }).catch(() => {});
+  const art = await page.evaluate(() => { const its = [...document.querySelectorAll('#sgrid .item')]; return { n: its.length, art: its.filter(i => { const im = i.querySelector('.ic img'); return im && im.naturalWidth > 0; }).length, drawn: its.filter(i => i.querySelector('.ic svg')).length, lock: its.filter(i => i.classList.contains('no') && getComputedStyle(i.querySelector('.ic'), '::after').content !== 'none').length, no: its.filter(i => i.classList.contains('no')).length, gray: (() => { const im = document.querySelector('.item.no .ic img'); return im ? getComputedStyle(im).filter : ''; })() }; });
+  check(art.n === 7 && art.art === 6 && art.drawn === 1, `closet hats show item art (${art.art} images + ${art.drawn} drawn "no hat")`);
+  check(art.no > 0 && art.lock === art.no && /grayscale/.test(art.gray), `locked tiles are desaturated with a lock (${art.lock}/${art.no})`);
   // give coins, buy + equip
   await page.evaluate(() => { window.__ff.save.coins = 500; window.__ff.renderShop(); });
   await page.click('.item[data-id="crown"]'); await page.waitForTimeout(500);

@@ -23,11 +23,11 @@ const IMGS = ['ff_title', 'ff_shop', 'ff_comic1', 'ff_comic2', 'ff_comic3', 'ff_
   const slow = await serve({ delay: 8000 });
   const s = await open(b, slow.url, VP.phone);
   check(await s.page.evaluate(() => document.getElementById('bg-title').classList.contains('loading')), 'loading skeleton while art downloads');
-  await shot(s.page, 'boot_loading_phone'); slow.srv.close();
+  await shot(s.page, 'boot_loading_phone'); await s.ctx.close(); slow.srv.close();
   // missing art: game falls back to the 3D scenery and still starts
   const miss = await serve({ block: /assets\// });
   const m = await open(b, miss.url, VP.desktop, { ignore404: true });
-  await m.page.waitForFunction(() => window.__ff.ART.title === 'failed', null, { timeout: 30000, polling: 250 });
+  await m.page.waitForFunction(() => window.__ff.ART.title === 'failed', null, { timeout: 60000, polling: 250 });
   await m.page.waitForTimeout(800);
   check(await m.page.evaluate(() => window.__ff.drawMode()) === 'world', 'missing art -> full 3D title scene');
   await m.page.waitForFunction(() => window.__ff.sky().st[0] === 'failed', null, { timeout: 30000 }).catch(() => {});
@@ -38,6 +38,13 @@ const IMGS = ['ff_title', 'ff_shop', 'ff_comic1', 'ff_comic2', 'ff_comic3', 'ff_
   const st0 = await m.page.evaluate(() => window.__ff.S.state);
   check(st0 === 'play', 'game starts without art (state ' + st0 + ')');
   check(m.errs.length === 0, 'no errors without art' + (m.errs.length ? ': ' + m.errs.join(' | ') : ''));
+  await m.page.evaluate(() => { const f = window.__ff; f.S.state = 'title'; f.openShop(); });
+  await m.page.waitForFunction(() => document.querySelectorAll('#sgrid .ic.fail').length === 6, null, { timeout: 20000 }).catch(() => {});
+  check(await m.page.evaluate(() => document.querySelectorAll('#sgrid .ic.fail').length === 6 && getComputedStyle(document.querySelector('#sgrid .ic.fail')).backgroundImage + getComputedStyle(document.querySelector('#sgrid .ic.fail')).backgroundColor !== ''), 'missing item art -> colour swatches');
+  await m.page.evaluate(() => { const f = window.__ff; f.S.state = 'play'; f.loadFloor(0); f.openDialog('keeper'); });
+  await m.page.waitForFunction(() => document.getElementById('dpt').classList.contains('off'), null, { timeout: 20000 }).catch(() => {});
+  check(await m.page.evaluate(() => document.getElementById('dpt').classList.contains('off') && document.getElementById('hpt').classList.contains('off')), 'missing portraits -> dialog/HUD without portrait frames');
+  await shot(m.page, 'boot_fallback_dialog');
   miss.srv.close();
   await b.close(); srv.close(); done('boot');
 })().catch(e => { console.error(e); process.exit(1); });
