@@ -325,12 +325,28 @@ body.touch .wpn{bottom:calc(var(--sb) + 62px);max-width:calc(100% - 236px - var(
 .item.no .ic.fail::after{display:none}
 @media (orientation:landscape) and (max-height:540px){.item .ic{height:44px}.item .ic svg{width:34px;height:34px}}
 @media (prefers-reduced-motion:reduce){.pt.swap,.pop.show{animation:none}.pt img,.item .ic img{transition:none}}
+
+/* ---- video cut-ins (assets/video/ffv_*.mp4) ---- */
+.vcut{position:fixed;inset:0;background:#1d0f22;cursor:pointer;overflow:hidden;touch-action:manipulation}
+.vcut video,.vcut .vpost{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover}
+@media (max-aspect-ratio:1/1){.vcut video,.vcut .vpost{object-fit:contain}}
+.vcut::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 45%,transparent 60%,rgba(29,15,34,.55));pointer-events:none}
+.vname{position:absolute;z-index:1;left:calc(var(--sl) + 4vw);bottom:calc(var(--sb) + 5vh);display:flex;align-items:center;gap:12px;padding:8px 18px 8px 10px;transform:rotate(-2deg);animation:vnameIn .5s .5s cubic-bezier(.2,1.4,.4,1) both}
+.vname .pt{--ps:64px}
+.vname b{display:block;font-family:var(--comic);font-size:clamp(26px,4vw,40px);letter-spacing:.04em;line-height:1;color:var(--ketchup);-webkit-text-stroke:1.5px var(--ink);paint-order:stroke fill}
+.vname small{display:block;font-size:13px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;opacity:.75}
+@keyframes vnameIn{from{opacity:0;transform:translateX(-30px) rotate(-6deg)}}
+.vskip{position:absolute;z-index:1;right:calc(var(--sr) + 16px);bottom:calc(var(--sb) + 16px)}
+.bgl .bgv{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;object-position:var(--op,50% 50%);opacity:0;transition:opacity .45s ease}
+.bgl .bgv.on{opacity:1}
+@media (orientation:portrait){.bgl .bgv{object-position:var(--opp,var(--op,50% 50%))}}
+@media (prefers-reduced-motion:reduce){.vname{animation:none}.bgl .bgv{transition:none}}
 </style>
 
 <div class="bgart" id="bgart" aria-hidden="true">
   <div class="bgl loading" id="bg-title" style="--sk:#7fd8ff;--sk2:#c4efff;--op:50% 50%;--opp:57% 50%;--kbo:62% 45%"><img src="assets/ff_title.webp" data-art="title" alt="" decoding="async" loading="eager" fetchpriority="high"></div>
   <div class="bgl loading" id="bg-shop" style="--sk:#6b3f22;--sk2:#9a6a3f;--op:50% 60%;--opp:50% 60%;--kbo:50% 30%"><img src="assets/ff_shop.webp" data-art="shop" alt="" decoding="async" loading="eager"></div>
-  <div class="bgl loading" id="bg-victory" style="--sk:#ffb38a;--sk2:#ffe0b0;--op:50% 50%;--opp:50% 45%;--kbo:50% 40%"><img src="assets/ff_victory.webp" data-art="victory" alt="" decoding="async" loading="eager"></div>
+  <div class="bgl loading" id="bg-victory" style="--sk:#ffb38a;--sk2:#ffe0b0;--op:50% 50%;--opp:50% 45%;--kbo:50% 40%"><img src="assets/ff_victory.webp" data-art="victory" alt="" decoding="async" loading="eager"><video class="bgv" id="vvic" playsinline preload="none" poster="assets/video/ffv_victory.webp" aria-hidden="true"></video></div>
 </div>
 <canvas id="game" tabindex="0" aria-label="Frankfurt Falls game"></canvas>
 <div id="fx"><div class="qm" id="qm" hidden>?</div><div class="bub" id="fbub" hidden></div></div>
@@ -434,6 +450,12 @@ body.touch .wpn{bottom:calc(var(--sb) + 62px);max-width:calc(100% - 236px - var(
   <div class="cbtns"><button class="btn alt sm" id="cskip">Skip</button><button class="btn sm" id="cnext">Next</button></div>
 </div>
 
+<div class="vcut" id="vcut" role="dialog" aria-label="Chef Le Grill appears" hidden>
+  <img class="vpost" src="assets/video/ffv_chef.webp" alt="" decoding="async" loading="lazy">
+  <video id="vchef" playsinline preload="none" aria-hidden="true"></video>
+  <div class="vname card"><span class="pt" id="vnpt" aria-hidden="true"><img alt="" decoding="async"></span><div><small>Final boss</small><b>CHEF LE GRILL</b></div></div>
+  <button class="btn alt sm vskip" id="vskip">Skip ▸</button>
+</div>
 <div class="vs" id="vs" hidden><div class="hpb"><b>Frank</b><div class="bar"><i id="hpF" style="width:100%"></i></div></div><div class="vsx">VS</div><div class="hpb r"><b id="rname">Rival</b><div class="bar"><i id="hpR" style="width:100%"></i></div></div></div>
 <div class="wpn card" id="wpn" hidden><b><span class="sw" id="wsw"></span><span id="wname">Bun slap</span></b> <span id="wammo"></span><small id="whint">J or R2 shoot · K or △ slap · G or ○ grab crate</small></div>
 <div class="fight" id="fight" hidden>FIGHT!</div>
@@ -596,13 +618,13 @@ function chargeSound(on,c){if(!AU.c)return;
 const mid=m=>440*Math.pow(2,(m-69)/12);
 const MEL=[72,0,76,0,79,0,76,0,74,0,72,0,0,0,67,0,71,0,74,0,79,0,77,0,76,0,74,0,0,0,0,0,72,0,76,0,81,0,79,0,77,0,76,0,74,0,72,0,77,0,76,0,74,0,72,0,71,0,67,0,0,0,0,0];
 const CH=[[48,52,55],[43,47,50],[45,48,52],[41,45,48]];
-function schedule(){const c=AU.c;if(!c)return;const run=S.state!=='pause';const sp=60/(chef&&chef.state!=='wait'?150:128+S.floor*6)/4;
+function schedule(){const c=AU.c;if(!c)return;const run=S.state!=='pause'&&S.state!=='cutin';const sp=60/(chef&&chef.state!=='wait'?150:128+S.floor*6)/4;
   while(AU.next<c.currentTime+.12){if(run){const s=AU.step%64,ch=CH[Math.floor(s/16)],b=s%16,w=AU.next-c.currentTime;
     if(b===0||b===8)tone('triangle',mid(ch[0]),0,.2,.11,w,AU.mus);
     if(b===4||b===12){tone('triangle',mid(ch[0]+7),0,.16,.09,w,AU.mus);ch.forEach(n=>tone('square',mid(n+12),0,.07,.012,w,AU.mus));}
     if(MEL[s])tone('square',mid(MEL[s]),0,.13,.03,w,AU.mus);if(b%2===0)noise(.03,.02,'highpass',7000,w,AU.mus);AU.step++;}
     AU.next+=sp;}}
-function setMute(m){S.muted=m;if(AU.master)AU.master.gain.value=m?0:.8;$('bmute').textContent='Sound: '+(m?'off':'on');$('bmute').setAttribute('aria-pressed',String(m));}
+function setMute(m){S.muted=m;if(AU.master)AU.master.gain.value=m?0:.8;$('bmute').textContent='Sound: '+(m?'off':'on');$('bmute').setAttribute('aria-pressed',String(m));['vchef','vvic'].forEach(id=>{const e=$(id);if(e)e.muted=m;});}
 
 /* ---------- rubber hose limbs ---------- */
 class Hose{
@@ -870,7 +892,7 @@ function addSurf(o){const s=Object.assign({a0:0,a1:TAU,r0:0,r1:1,y:0,full:false,
 function mkCoin(x,y,z,s){const g=new THREE.Group();g.position.set(x,y,z);levelG.add(g);M(G.coin,T('#ffcc33'),0,0,0,.3,.3,.07,g);M(G.torus,noOL(T('#e0a10a')),0,0,.036,.2,.2,.1,g);M(G.sphLo,noOL(T('#e2603a')),0,0,.04,.05,.13,.03,g).rotation.z=.6;
   const c={g,x,y,z,s,ph:Math.random()*TAU};coins.push(c);return c;}
 function loadFloor(i){
-  BR=null;S.floor=i;const F=FL[i];base=BASES[i];
+  BR=null;S.floor=i;const F=FL[i];base=BASES[i];if(i===3&&S.state!=='title')vidLoad('chef');
   disposeGroup(levelG);surfs=[];walls=[];doors=[];dogs=[];drips=[];pans=[];zones=[];coins=[];keeper=null;exitDoor=null;chef=null;roof=null;cage=null;
   hz={};S.choices.forEach(c=>hz[c.key]=true);
   setSky(i);
@@ -1058,7 +1080,7 @@ function stepChef(dt){
   else if(C.state==='dizzy'){C.crouch=Math.min(1,C.crouch+dt*4);if(C.t>(C.phase2?4.8:5.8)){C.state='idle';C.t=0;chefSay('Ha! Too slow!');}}
   else if(C.state==='hurt'){C.flash=Math.max(0,C.flash-dt);C.crouch=Math.max(0,C.crouch-dt*2);if(C.t>1.4){
       if(C.hp<=0){C.state='defeated';C.t=0;sfx.fanfare();for(let i=0;i<80;i++)confetti(0,roof.y+3,0);S.coins+=25;save.coins+=25;persist();floatText('+25 coins',P.x,P.y+2.4,P.z,'#ffcc33');setMood('happy',6);}
-      else if(C.hp===1&&!C.phase2){C.phase2=true;C.step=0;C.state='idle';C.t=-.6;chefSay("NOW I'M STEAMING!");sfx.chefHurt();shake=.4;C.head.children[0].material=T('#ff8a6a');}
+      else if(C.hp===1&&!C.phase2){vidLoad('victory');C.phase2=true;C.step=0;C.state='idle';C.t=-.6;chefSay("NOW I'M STEAMING!");sfx.chefHurt();shake=.4;C.head.children[0].material=T('#ff8a6a');}
       else{C.state='idle';C.t=0;}}}
   else if(C.state==='defeated'){C.tip=Math.min(1,C.tip+dt*1.5);roof.tk=0;if(cage&&!cage.freed&&C.t>.6){cage.freed=true;sfx.happy();floatText("We're free!",cage.x,roof.y+2.6,cage.z,'#9fe3a6');}
     if(C.t>3.4&&S.state==='play')playComic('end',finish);}
@@ -1147,7 +1169,7 @@ function burnerHot(o){const t=(worldT+o.bt)%3.2;return t<1.6?0:t<2.25?1:2;}
 const key={left:0,right:0,fwd:0,back:0,jump:0,charge:0,camL:0,camR:0,camU:0,camD:0,shoot:0,slap:0,grab:0},tch={jump:0,charge:0,shoot:0,slap:0,grab:0},pad={mx:0,my:0,rx:0,ry:0,jump:0,charge:0,shoot:0},joy={id:null,mx:0,my:0,ox:0,oy:0};
 const input={mx:0,my:0,jump:0,charge:0,cam:0,tilt:0};let jumpEdge=false,prevPad={};
 const KMAP={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ArrowUp:'fwd',KeyW:'fwd',ArrowDown:'back',KeyS:'back',Space:'jump',KeyZ:'jump',ShiftLeft:'charge',ShiftRight:'charge',KeyX:'charge',KeyC:'charge',KeyQ:'camL',KeyE:'camR',KeyR:'camU',KeyF:'camD',KeyJ:'shoot',KeyK:'slap',KeyG:'grab'};
-addEventListener('keydown',e=>{if(e.code==='Tab'&&MENUS.includes(S.state))kbnav(true);const k=KMAP[e.code];if(k||e.code==='Enter')e.preventDefault();if(e.repeat)return;
+addEventListener('keydown',e=>{if(S.state==='cutin'&&!e.repeat&&e.code!=='Tab'){e.preventDefault();endCut();return;}if(e.code==='Tab'&&MENUS.includes(S.state))kbnav(true);const k=KMAP[e.code];if(k||e.code==='Enter')e.preventDefault();if(e.repeat)return;
   if(k){key[k]=1;press(k);}if(e.code==='Enter')press('confirm');if(e.code==='Escape')press('esc');if(e.code==='KeyP')togglePause();if(e.code==='KeyM')setMute(!S.muted);if(e.code==='KeyV'&&S.state==='play')cycleZoom();if(e.code==='Digit1')press('opt0');if(e.code==='Digit2')press('opt1');});
 addEventListener('keyup',e=>{const k=KMAP[e.code];if(k)key[k]=0;});
 addEventListener('blur',()=>{for(const k in key)key[k]=0;});
@@ -1181,6 +1203,7 @@ document.querySelectorAll('.pb').forEach(el=>{const k=el.dataset.k;
   const off=()=>{tch[k]=0;el.classList.remove('on');};
   el.addEventListener('pointerdown',on);el.addEventListener('pointerup',off);el.addEventListener('pointercancel',off);el.addEventListener('lostpointercapture',off);});
 function press(a){
+  if(S.state==='cutin'){endCut();return;}
   if(S.state==='play'){if(a==='jump')jumpEdge=true;if(BR&&a==='slap')bridgeSlap();if(BR&&a==='grab')bridgeGrab();return;}
   if(MENUS.includes(S.state)&&menuKey(a))return;
   if(S.state==='title'){if(a==='jump'||a==='confirm')startGame();return;}
@@ -1191,7 +1214,7 @@ function press(a){
   if(S.state==='dialog')dialogPress(a);}
 function clickBtn(id,fn){$(id).addEventListener('click',e=>{e.stopPropagation();if(!isKb())e.currentTarget.blur();initAudio();fn();});}
 /* ---------- menu navigation: keyboard arrows / WASD, gamepad stick + d-pad, Enter / Space / X activate, Esc / O back ---------- */
-const MENUS=['title','shop','end','pause','comic'];
+const MENUS=['title','shop','end','pause','comic'];/* 'cutin' is skipped by any input in press() */
 const ROOT={title:'title',shop:'shop',end:'end',pause:'pause',comic:'comic'};
 const PRIMARY={title:()=>$('bstart'),shop:()=>$('tabs').querySelector('[aria-selected="true"]'),end:()=>$('bagain'),pause:()=>$('bresume'),comic:()=>$('cnext')};
 const isKb=()=>document.body.classList.contains('kbnav');
@@ -1214,7 +1237,7 @@ function menuKey(a){
   return false;}
 clickBtn('bstart',()=>startGame());clickBtn('bagain',()=>startGame());clickBtn('bresume',()=>togglePause());clickBtn('bmute',()=>setMute(!S.muted));clickBtn('bpause',()=>togglePause());clickBtn('optA',()=>choose(0));clickBtn('optB',()=>choose(1));
 clickBtn('bshop',()=>openShop());clickBtn('bshop2',()=>openShop());clickBtn('sclose',()=>closeShop());clickBtn('bstory',()=>playComic('intro',()=>{S.state='title';updateOverlays();dropLetters();}));
-clickBtn('cnext',()=>comicNext());clickBtn('cskip',()=>comicSkip());$('comic').addEventListener('click',e=>{if(e.target.closest('button'))return;comicNext();});
+clickBtn('vskip',()=>endCut());$('vcut').addEventListener('click',()=>endCut());clickBtn('cnext',()=>comicNext());clickBtn('cskip',()=>comicSkip());$('comic').addEventListener('click',e=>{if(e.target.closest('button'))return;comicNext();});
 
 /* ---------- shop ---------- */
 let shopTab='hat',shopReturn='title';
@@ -1342,7 +1365,7 @@ function showIntro(){setPt($('ipt'),S.floor===3?'chef':null);const F=FL[S.floor]
   const el=$('intro');el.hidden=false;el.classList.remove('show');void el.offsetWidth;el.classList.add('show');clearTimeout(showIntro.t);showIntro.t=setTimeout(()=>{el.hidden=true;},2300);}
 function nextFloor(){S.state='trans';sfx.door();setMood('happy',2);S.coins+=5;save.coins+=5;persist();floatText('+5 coins',P.x,P.y+2.3,P.z,'#ffcc33');updateOverlays();
   setTimeout(()=>fadeTo(()=>{if(S.floor<3&&RIVALS[S.floor]){loadBridge(S.floor);snapCam=true;S.state='play';showBridgeIntro();updateOverlays();setTimeout(()=>{if(BR&&S.state==='play')openDialog('rival');},1600);}else{loadFloor(S.floor+1);snapCam=true;S.state='play';showIntro();updateOverlays();}}),350);}
-function finish(){S.state='end';setPt($('ept1'),'frank_happy','frank');setPt($('ept2'),'buddies');chargeSound(false);let isBest=false;
+function finish(){S.state='end';setTimeout(endVideo,0);setPt($('ept1'),'frank_happy','frank');setPt($('ept2'),'buddies');chargeSound(false);let isBest=false;
   if(save.best==null||S.time<save.best){save.best=S.time;isBest=true;persist();}
   $('etime').textContent=fmt(S.time);$('efalls').textContent=S.falls;$('ecoins').textContent=S.coins;
   $('erecipe').innerHTML=S.choices.map(c=>`<span class="chip" style="--c:${HAZ[c.key].c}">${HAZ[c.key].label}</span>`).join('');
@@ -1363,7 +1386,7 @@ function initArt(){document.querySelectorAll('img[data-art]').forEach(im=>{const
 const BGK={title:'title',shop:'shop',end:'victory'};
 let lastSt=null;
 function updateOverlays(){const st=S.state,inGame=st==='play'||st==='dialog'||st==='pause'||st==='trans';
-  showEl($('title'),st==='title');showEl($('pause'),st==='pause');showEl($('end'),st==='end');showEl($('shop'),st==='shop');showEl($('comic'),st==='comic');
+  showEl($('title'),st==='title');showEl($('pause'),st==='pause');showEl($('end'),st==='end');showEl($('shop'),st==='shop');showEl($('comic'),st==='comic');showEl($('vcut'),st==='cutin');if(st!=='end'){const vv=$('vvic');if(vv.classList.contains('on')){vv.classList.remove('on');try{vv.pause();}catch(_){}}}
   $('hud').hidden=!inGame;
   showEl($('dlg'),st==='dialog'||(st==='pause'&&S.prev==='dialog'));$('pad').hidden=!(touchMode&&st==='play');
   const boss=inGame&&chef&&chef.state!=='wait';$('bossbar').hidden=!boss;
@@ -1385,6 +1408,32 @@ function updateHud(force){const fl=BR?'Bridge '+(BR.i+1)+'/3':S.floor===3?'Final
   const top=FL[S.floor].topY,cur=clamp((P.y-base)/top,0,1),best=clamp((P.best-base)/top,0,1);
   $('mbest').style.height=best*100+'%';$('mline').style.bottom=best*100+'%';$('mcur').style.bottom=cur*100+'%';}
 
+/* ---------- video cut-ins (assets/video): Chef entrance + animated victory backdrop ----------
+   Stills / old behaviour under reduced motion, small screens, data-saver, low-end CPUs, failure, or if the clip isn't playing within ~0.6 s.
+   VID.force (true/false) overrides the check for tests. */
+const VID={force:null,st:{}};
+function vidAllowed(){if(VID.force!=null)return VID.force;const c=navigator.connection;return !RM()&&Math.min(innerWidth,innerHeight)>=540&&!(c&&c.saveData)&&(navigator.hardwareConcurrency||8)>2;}
+const vidEl=k=>k==='chef'?$('vchef'):$('vvic');
+function vidLoad(k){if(VID.st[k]||!vidAllowed())return;const v=vidEl(k);VID.st[k]='loading';v.preload='auto';
+  v.addEventListener('canplaythrough',()=>{if(VID.st[k]==='loading')VID.st[k]='ready';},{once:true});
+  v.addEventListener('error',()=>{VID.st[k]='failed';},{once:true});v.src='assets/video/ffv_'+k+'.mp4';v.load();}
+function vidPlay(k,onStart,onFail){const v=vidEl(k);if(!vidAllowed()||VID.st[k]==='failed'){onFail();return;}if(!VID.st[k])vidLoad(k);
+  let done=false;const fin=f=>{if(done)return;done=true;clearTimeout(t);v.removeEventListener('playing',ok);f();};
+  const ok=()=>fin(()=>{VID.st[k]='ready';onStart(v);});const bad=()=>fin(()=>{try{v.pause();}catch(_){}onFail();});
+  const t=setTimeout(()=>{if(v.currentTime>0&&!v.paused)ok();else bad();},VID.st[k]==='ready'?600:900);
+  v.addEventListener('playing',ok);v.addEventListener('error',()=>{VID.st[k]='failed';bad();},{once:true});
+  try{v.currentTime=0;}catch(_){}v.muted=S.muted;v.volume=.7;
+  const p=v.play();if(p&&p.catch)p.catch(()=>{if(done)return;v.muted=true;const p2=v.play();if(p2&&p2.catch)p2.catch(bad);});}
+/* both clips fade to black in their last ~0.3 s: stop just before (Chef cut ends, victory holds its last bright frame) */
+const VCUT={chef:4.3,victory:7.45};
+function vidWatch(v,at,fn){const tick=()=>{if(v.currentTime>=at){fn();return;}if(!v.paused&&!v.ended)requestAnimationFrame(tick);};requestAnimationFrame(tick);v.onended=()=>fn();}
+const CUT={on:false,cb:null};
+function chefEntrance(cb){if(!vidAllowed()||VID.st.chef==='failed'){cb();return;}
+  CUT.on=true;CUT.cb=cb;S.state='cutin';P.vx=P.vz=0;P.charging=false;P.charge=0;chargeSound(false);setPt($('vnpt'),'chef');updateOverlays();
+  vidPlay('chef',v=>{if(!CUT.on){v.pause();return;}vidWatch(v,VCUT.chef,endCut);},()=>{if(CUT.on)endCut();});}
+function endCut(){if(!CUT.on)return;CUT.on=false;const v=$('vchef');try{v.pause();}catch(_){}v.onended=null;S.state='play';const cb=CUT.cb;CUT.cb=null;updateOverlays();if(cb)cb();}
+function endVideo(){const v=$('vvic');v.classList.remove('on');if(S.state!=='end')return;
+  vidPlay('victory',vv=>{if(S.state!=='end'){vv.pause();return;}vv.classList.add('on');vidWatch(vv,VCUT.victory,()=>{vv.pause();try{if(vv.currentTime>VCUT.victory+.05)vv.currentTime=VCUT.victory-.1;}catch(_){}vv.onended=null;});},()=>{v.classList.remove('on');});}
 /* ---------- portraits + item art (assets/ui) ---------- */
 const UIA={};/* key -> loading | ready | failed */
 const RIVAL_PT=['bratty','kielbasa','wurstula'];
@@ -1514,7 +1563,7 @@ function stepPlayer(dt){
   for(let i=coins.length-1;i>=0;i--){const c=coins[i],cp=c.g.position;if(Math.hypot(P.x-cp.x,P.z-cp.z)<.7&&Math.abs(P.y+.9-c.y)<1){levelG.remove(c.g);coins.splice(i,1);S.coins++;save.coins++;persist();sfx.coin();for(let k=0;k<10;k++)part(cp.x,c.y,cp.z,rnd(-2,2),rnd(1,4),rnd(-2,2),.5,0xffcc33,8);}}
   if(keeper&&!keeper.answered&&P.onGround&&Math.hypot(P.x-keeper.x,P.z-keeper.z)<2.2&&Math.abs(P.y-keeper.y)<.3){openDialog('keeper');return;}
   if(exitDoor&&exitDoor.open&&P.onGround&&Math.hypot(P.x-exitDoor.x,P.z-exitDoor.z)<.95&&Math.abs(P.y-exitDoor.y)<.3){nextFloor();return;}
-  if(chef&&chef.state==='wait'&&P.onGround&&P.sup&&P.sup.roof){openDialog('chef');return;}
+  if(chef&&chef.state==='wait'&&P.onGround&&P.sup&&P.sup.roof){chefEntrance(()=>openDialog('chef'));return;}
   P.walk+=Math.hypot(P.vx,P.vz)*dt*2.6;
 }
 function burn(){if(P.inv>0)return;const a=Math.atan2(P.z,P.x);hit(Math.cos(a)*3+rnd(-2,2),11,Math.sin(a)*3+rnd(-2,2),sfx.sizzle);frankSay('HOT HOT HOT!');for(let i=0;i<16;i++)part(P.x,P.y+.3,P.z,rnd(-2,2),rnd(2,6),rnd(-2,2),.6,i%2?0xff7a1a:0xffd23f,-3);}
@@ -1599,7 +1648,7 @@ const RIVALS=[
    line:"Gooood evening. I am Count Wurstula. I vant to grill your bun. Ah-ah-ah!",taunts:['Ah-ah-ah!','Bleh!','I vant your bun!'],ko:'Curses... the sunlight... it is only a heat lamp...'}
 ];
 function loadBridge(i){
-  const R0=RIVALS[i];setSky(i+1);/* a bridge already shows the sky of the floor it leads to */
+  const R0=RIVALS[i];setSky(i+1);if(i===2)vidLoad('chef');/* a bridge already shows the sky of the floor it leads to */
   disposeGroup(levelG);surfs=[];walls=[];doors=[];dogs=[];drips=[];pans=[];zones=[];coins=[];keeper=null;exitDoor=null;chef=null;roof=null;cage=null;
   base=BASES[i+1]-1;const zc=50,Y=base+4;
   addSurf({rect:[-14,14,zc-2.2,zc+2.2],y:Y});
@@ -1782,7 +1831,7 @@ initArt();loadFloor(0);
 camera.position.set(0,14,60);cam.look.set(0,8,17);
 dropLetters();updateOverlays();
 requestAnimationFrame(t=>{last=t;frame(t);});
-window.__ff={UIA,cam,sky:()=>({k:SKY.k,a:SKY.a,b:SKY.b,st:SKY.st.slice(),w:SU.wB.value,mix:SU.mixv.value,img:SU.tB.value&&SU.tB.value.image&&(SU.tB.value.image.src||'canvas'),fog:'#'+scene.fog.color.getHexString(),bg:'#'+skyScene.background.getHexString(),flat:FL[SKY.k].c.sky}),lettersSettled:()=>letters.every(g=>g.userData.off===0&&g.userData.vy===0&&g.userData.delay<=0),ART,drawMode:()=>DM.mode,renderShop,finish,comicNext,get CM(){return CM},S,P,save,loadBridge:i=>loadBridge(i),get BR(){return BR},openDialog,closeDialog,get chef(){return chef},loadFloor,startGame,surfs:()=>surfs,step:n=>{for(let i=0;i<n;i++)stepWorld(STEP);},openShop,playComic};
+window.__ff={video:v=>{VID.force=v;},VID,CUT,UIA,cam,sky:()=>({k:SKY.k,a:SKY.a,b:SKY.b,st:SKY.st.slice(),w:SU.wB.value,mix:SU.mixv.value,img:SU.tB.value&&SU.tB.value.image&&(SU.tB.value.image.src||'canvas'),fog:'#'+scene.fog.color.getHexString(),bg:'#'+skyScene.background.getHexString(),flat:FL[SKY.k].c.sky}),lettersSettled:()=>letters.every(g=>g.userData.off===0&&g.userData.vy===0&&g.userData.delay<=0),ART,drawMode:()=>DM.mode,renderShop,finish,comicNext,get CM(){return CM},S,P,save,loadBridge:i=>loadBridge(i),get BR(){return BR},openDialog,closeDialog,get chef(){return chef},loadFloor,startGame,surfs:()=>surfs,step:n=>{for(let i=0;i<n;i++)stepWorld(STEP);},openShop,playComic};
 })();
 </script>
 

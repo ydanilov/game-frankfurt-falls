@@ -2,7 +2,7 @@
 const http = require('http'), fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
 const ROOT = path.resolve(__dirname, '..');
-const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.webp': 'image/webp', '.png': 'image/png', '.css': 'text/css' };
+const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.webp': 'image/webp', '.png': 'image/png', '.css': 'text/css', '.mp4': 'video/mp4' };
 function serve(opts = {}) {
   return new Promise(res => {
     const srv = http.createServer((req, rsp) => {
@@ -11,8 +11,10 @@ function serve(opts = {}) {
       if (opts.block && opts.block.test(u)) { rsp.writeHead(404); return rsp.end(); }
       const f = path.join(ROOT, u === '/' ? 'tools/test.html' : u);
       if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { rsp.writeHead(404); return rsp.end(); }
-      const send = () => { rsp.writeHead(200, { 'content-type': TYPES[path.extname(f)] || 'application/octet-stream' }); fs.createReadStream(f).pipe(rsp); };
-      opts.delay && /assets\//.test(u) ? setTimeout(send, opts.delay) : send();
+      const send = () => { const type = TYPES[path.extname(f)] || 'application/octet-stream', size = fs.statSync(f).size, m = /bytes=(\d*)-(\d*)/.exec(req.headers.range || '');
+        if (m) { const a = m[1] ? +m[1] : 0, z = m[2] ? Math.min(+m[2], size - 1) : size - 1; rsp.writeHead(206, { 'content-type': type, 'accept-ranges': 'bytes', 'content-range': `bytes ${a}-${z}/${size}`, 'content-length': z - a + 1 }); return fs.createReadStream(f, { start: a, end: z }).pipe(rsp); }
+        rsp.writeHead(200, { 'content-type': type, 'accept-ranges': 'bytes', 'content-length': size }); fs.createReadStream(f).pipe(rsp); };
+      opts.delay && /assets\/(?!video)/.test(u) ? setTimeout(send, opts.delay) : send();
     }).listen(0, '127.0.0.1', () => res({ srv, url: `http://127.0.0.1:${srv.address().port}/tools/test.html` }));
   });
 }

@@ -4,7 +4,7 @@ const ptOk = (page, id, key) => page.waitForFunction(([id, key]) => { const e = 
 (async () => {
   const { srv, url } = await serve(); const b = await launch();
   const { page, errs } = await open(b, url, VP.desktop);
-  await page.evaluate(() => { const f = window.__ff; f.save.seenComic = true; f.startGame(); });
+  await page.evaluate(() => { const f = window.__ff; f.video(false); /* cut-ins are covered by video.js */ f.save.seenComic = true; f.startGame(); });
   await page.waitForFunction(() => window.__ff.S.state === 'play', null, { timeout: 15000 });
   for (let i = 0; i < 4; i++) {
     const r = await page.evaluate(i => { const f = window.__ff; f.S.choices = [{ key: 'grease', floor: 0 }, { key: 'dog', floor: 1 }, { key: 'burners', floor: 2 }].slice(0, i); f.loadFloor(i); f.step(600); return { floor: f.S.floor, surfs: f.surfs().length, state: f.S.state, y: f.P.y }; }, i);
