@@ -38,6 +38,35 @@ async function forced(b, url, vp, tag) {
   const { srv, url } = await serve(); const b = await launch();
   await forced(b, url, VP.desktop, 'desktop');
   await forced(b, url, VP.phone, 'phone');
+  // big-fall replay
+  console.log('-- big fall');
+  { const { page, ctx, errs } = await open(b, url, VP.desktop);
+    await page.evaluate(() => { const f = window.__ff; f.video(true); const v = document.getElementById('vfallv'); v.defaultPlaybackRate = v.playbackRate = 0.3; f.save.seenComic = true; f.startGame(); });
+    await page.waitForFunction(() => window.__ff.S.state === 'play', null, { timeout: 30000 });
+    check(await page.waitForFunction(() => window.__ff.VID.st.fall === 'ready', null, { timeout: 30000 }).then(() => true, () => false), 'fall clip preloaded when a floor starts');
+    check(await page.evaluate(() => window.__ff.bigFall(4)) === false, 'a small fall (4 m) does not trigger it');
+    await page.evaluate(() => { const f = window.__ff; f.S.falls = 7; f.bigFall(14); f.step(130); });
+    check(await page.evaluate(() => window.__ff.S.state) === 'cutin' && await playing(page, 'vfallv'), 'a 14 m fall plays the replay (game paused)');
+    check(await page.evaluate(() => document.getElementById('fcm').textContent === '-14 m!' && /Falls: 7/.test(document.getElementById('fcs').textContent)), 'caption shows the fall stats');
+    await page.evaluate(() => document.getElementById('vfallv').pause()); await shot(page, 'video_desktop_fall');
+    await page.keyboard.press('Space');
+    await page.waitForFunction(() => window.__ff.S.state === 'play', null, { timeout: 8000 }).catch(() => {});
+    check(await page.evaluate(() => window.__ff.S.state === 'play' && document.getElementById('vfall').hidden !== false || window.__ff.S.state === 'play'), 'any key skips back to play');
+    await page.evaluate(() => { const f = window.__ff; f.bigFall(16); f.step(130); });
+    check(await page.evaluate(() => window.__ff.S.state) === 'play', 'same floor: no second replay');
+    await page.evaluate(() => { const f = window.__ff; f.loadFloor(1); f.S.time += 30; f.bigFall(16); f.step(130); });
+    check(await page.evaluate(() => window.__ff.S.state) === 'play', 'next floor within the cooldown: no replay');
+    await page.evaluate(() => { const f = window.__ff; f.loadBridge(1); f.S.time += 200; f.bigFall(20); f.step(130); });
+    check(await page.evaluate(() => window.__ff.S.state) === 'play', 'never on a bridge');
+    await page.evaluate(() => { const f = window.__ff; f.loadFloor(2); f.save.fallReplays = false; f.bigFall(20); f.step(130); });
+    check(await page.evaluate(() => window.__ff.S.state) === 'play', 'setting off: no replay');
+    check(errs.length === 0, 'no console errors' + (errs.length ? ': ' + errs.join(' | ') : '')); await ctx.close(); }
+  { const { page, ctx } = await open(b, url, VP.phone, { touch: true });
+    await page.evaluate(() => { const f = window.__ff; f.video(true); const v = document.getElementById('vfallv'); v.defaultPlaybackRate = v.playbackRate = 0.3; f.save.seenComic = true; f.startGame(); });
+    await page.waitForFunction(() => window.__ff.VID.st.fall === 'ready', null, { timeout: 30000 }).catch(() => {});
+    await page.evaluate(() => { const f = window.__ff; f.bigFall(12); f.step(130); });
+    if (await playing(page, 'vfallv')) await page.evaluate(() => document.getElementById('vfallv').pause());
+    await shot(page, 'video_phone_fall'); await ctx.close(); }
   // default on a phone: stills (no cut-in)
   console.log('-- phone default');
   { const { page, ctx, errs } = await open(b, url, VP.phone, { touch: true });
@@ -57,7 +86,9 @@ async function forced(b, url, vp, tag) {
     await page.evaluate(() => window.__ff.video(true)); await toRoof(page);
     await page.waitForFunction(() => window.__ff.S.state === 'dialog', null, { timeout: 8000 }).catch(() => {});
     check(await page.evaluate(() => window.__ff.S.state) === 'dialog', 'blocked Chef clip -> straight to the dialog');
-    await page.evaluate(() => { const f = window.__ff; f.closeDialog(); f.S.state = 'play'; f.finish(); }); await page.waitForTimeout(2500);
+    await page.evaluate(() => { const f = window.__ff; f.closeDialog(); f.S.state = 'play'; f.loadFloor(1); f.S.time += 500; f.bigFall(15); f.step(130); });
+    check(await page.evaluate(() => window.__ff.S.state) === 'play', 'blocked fall clip -> no replay, play continues');
+    await page.evaluate(() => { const f = window.__ff; f.S.state = 'play'; f.finish(); }); await page.waitForTimeout(2500);
     check(await page.evaluate(() => !document.getElementById('vvic').classList.contains('on') && window.__ff.ART.victory === 'ready'), 'blocked victory clip -> painted still');
     await shot(page, 'video_blocked_end');
     check(errs.filter(e => !/ffv_/.test(e)).length === 0, 'no unexpected errors'); await ctx.close(); }

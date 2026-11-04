@@ -341,6 +341,14 @@ body.touch .wpn{bottom:calc(var(--sb) + 62px);max-width:calc(100% - 236px - var(
 .bgl .bgv.on{opacity:1}
 @media (orientation:portrait){.bgl .bgv{object-position:var(--opp,var(--op,50% 50%))}}
 @media (prefers-reduced-motion:reduce){.vname{animation:none}.bgl .bgv{transition:none}}
+
+/* ---- big-fall replay (ffv_fall) ---- */
+.fcap{position:absolute;z-index:1;left:50%;top:calc(var(--st) + 4vh);transform:translateX(-50%) rotate(-2deg);text-align:center;padding:8px 18px 10px;max-width:calc(100% - 32px);box-sizing:border-box;animation:fcapIn .45s .3s cubic-bezier(.2,1.5,.4,1) both}
+.fcap b{display:block;font-family:var(--comic);font-size:clamp(30px,5vw,48px);letter-spacing:.04em;line-height:1;color:var(--ketchup);-webkit-text-stroke:1.5px var(--ink);paint-order:stroke fill}
+.fcap span{display:block;font-family:var(--comic);font-size:clamp(18px,2.6vw,24px);letter-spacing:.03em;margin-top:2px}
+.fcap small{display:block;font-size:13px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;opacity:.75;margin-top:2px}
+@keyframes fcapIn{from{opacity:0;transform:translateX(-50%) translateY(-20px) rotate(-6deg) scale(.9)}}
+@media (prefers-reduced-motion:reduce){.fcap{animation:none}}
 </style>
 
 <div class="bgart" id="bgart" aria-hidden="true">
@@ -414,6 +422,7 @@ body.touch .wpn{bottom:calc(var(--sb) + 62px);max-width:calc(100% - 236px - var(
     <div class="btnrow" style="margin-top:16px">
       <button class="btn" id="bresume">Resume</button>
       <button class="btn alt" id="bmute" aria-pressed="false">Sound: on</button>
+      <button class="btn gold sm" id="bfall" aria-pressed="true">Fall replays: on</button>
     </div>
   </div>
 </div>
@@ -455,6 +464,12 @@ body.touch .wpn{bottom:calc(var(--sb) + 62px);max-width:calc(100% - 236px - var(
   <video id="vchef" playsinline preload="none" aria-hidden="true"></video>
   <div class="vname card"><span class="pt" id="vnpt" aria-hidden="true"><img alt="" decoding="async"></span><div><small>Final boss</small><b>CHEF LE GRILL</b></div></div>
   <button class="btn alt sm vskip" id="vskip">Skip ▸</button>
+</div>
+<div class="vcut" id="vfall" role="dialog" aria-label="Big fall replay" hidden>
+  <img class="vpost" src="assets/video/ffv_fall.webp" alt="" decoding="async" loading="lazy">
+  <video id="vfallv" playsinline preload="none" aria-hidden="true"></video>
+  <div class="fcap card"><b id="fcm">-14 m!</b><span id="fcy">AAAAAA!</span><small id="fcs">Falls: 7</small></div>
+  <button class="btn alt sm vskip" id="vfskip">Skip ▸</button>
 </div>
 <div class="vs" id="vs" hidden><div class="hpb"><b>Frank</b><div class="bar"><i id="hpF" style="width:100%"></i></div></div><div class="vsx">VS</div><div class="hpb r"><b id="rname">Rival</b><div class="bar"><i id="hpR" style="width:100%"></i></div></div></div>
 <div class="wpn card" id="wpn" hidden><b><span class="sw" id="wsw"></span><span id="wname">Bun slap</span></b> <span id="wammo"></span><small id="whint">J or R2 shoot · K or △ slap · G or ○ grab crate</small></div>
@@ -568,7 +583,7 @@ const SKINC={classic:'#e2603a',chili:'#b8321f',veggie:'#7cc35a',golden:'#f5b81c'
 
 /* ---------- save ---------- */
 const SAVE_KEY='frankfurtFalls.save';
-let save={coins:0,owned:['hat:chef','hat:none','bun:sesame','bun:plain','skin:classic','trail:mustard'],eq:{hat:'chef',bun:'sesame',skin:'classic',trail:'mustard'},seenComic:false,best:null};
+let save={coins:0,owned:['hat:chef','hat:none','bun:sesame','bun:plain','skin:classic','trail:mustard'],eq:{hat:'chef',bun:'sesame',skin:'classic',trail:'mustard'},seenComic:false,best:null,fallReplays:true};
 try{const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');if(s)save=Object.assign(save,s,{eq:Object.assign(save.eq,s.eq||{})});const b=localStorage.getItem('frankfurtFalls.best');if(b&&save.best==null)save.best=+b;}catch(e){}
 function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch(e){}}
 
@@ -624,7 +639,7 @@ function schedule(){const c=AU.c;if(!c)return;const run=S.state!=='pause'&&S.sta
     if(b===4||b===12){tone('triangle',mid(ch[0]+7),0,.16,.09,w,AU.mus);ch.forEach(n=>tone('square',mid(n+12),0,.07,.012,w,AU.mus));}
     if(MEL[s])tone('square',mid(MEL[s]),0,.13,.03,w,AU.mus);if(b%2===0)noise(.03,.02,'highpass',7000,w,AU.mus);AU.step++;}
     AU.next+=sp;}}
-function setMute(m){S.muted=m;if(AU.master)AU.master.gain.value=m?0:.8;$('bmute').textContent='Sound: '+(m?'off':'on');$('bmute').setAttribute('aria-pressed',String(m));['vchef','vvic'].forEach(id=>{const e=$(id);if(e)e.muted=m;});}
+function setMute(m){S.muted=m;if(AU.master)AU.master.gain.value=m?0:.8;$('bmute').textContent='Sound: '+(m?'off':'on');$('bmute').setAttribute('aria-pressed',String(m));['vchef','vvic','vfallv'].forEach(id=>{const e=$(id);if(e)e.muted=m;});}
 
 /* ---------- rubber hose limbs ---------- */
 class Hose{
@@ -892,7 +907,7 @@ function addSurf(o){const s=Object.assign({a0:0,a1:TAU,r0:0,r1:1,y:0,full:false,
 function mkCoin(x,y,z,s){const g=new THREE.Group();g.position.set(x,y,z);levelG.add(g);M(G.coin,T('#ffcc33'),0,0,0,.3,.3,.07,g);M(G.torus,noOL(T('#e0a10a')),0,0,.036,.2,.2,.1,g);M(G.sphLo,noOL(T('#e2603a')),0,0,.04,.05,.13,.03,g).rotation.z=.6;
   const c={g,x,y,z,s,ph:Math.random()*TAU};coins.push(c);return c;}
 function loadFloor(i){
-  BR=null;S.floor=i;const F=FL[i];base=BASES[i];if(i===3&&S.state!=='title')vidLoad('chef');
+  BR=null;S.floor=i;const F=FL[i];base=BASES[i];if(i===3&&S.state!=='title')vidLoad('chef');if(S.state!=='title'&&save.fallReplays)vidLoad('fall');FR.pend=null;
   disposeGroup(levelG);surfs=[];walls=[];doors=[];dogs=[];drips=[];pans=[];zones=[];coins=[];keeper=null;exitDoor=null;chef=null;roof=null;cage=null;
   hz={};S.choices.forEach(c=>hz[c.key]=true);
   setSky(i);
@@ -1237,7 +1252,7 @@ function menuKey(a){
   return false;}
 clickBtn('bstart',()=>startGame());clickBtn('bagain',()=>startGame());clickBtn('bresume',()=>togglePause());clickBtn('bmute',()=>setMute(!S.muted));clickBtn('bpause',()=>togglePause());clickBtn('optA',()=>choose(0));clickBtn('optB',()=>choose(1));
 clickBtn('bshop',()=>openShop());clickBtn('bshop2',()=>openShop());clickBtn('sclose',()=>closeShop());clickBtn('bstory',()=>playComic('intro',()=>{S.state='title';updateOverlays();dropLetters();}));
-clickBtn('vskip',()=>endCut());$('vcut').addEventListener('click',()=>endCut());clickBtn('cnext',()=>comicNext());clickBtn('cskip',()=>comicSkip());$('comic').addEventListener('click',e=>{if(e.target.closest('button'))return;comicNext();});
+clickBtn('vskip',()=>endCut());$('vcut').addEventListener('click',()=>endCut());clickBtn('vfskip',()=>endCut());$('vfall').addEventListener('click',()=>endCut());clickBtn('bfall',()=>setFallReplays(!save.fallReplays));setFallReplays(save.fallReplays!==false);clickBtn('cnext',()=>comicNext());clickBtn('cskip',()=>comicSkip());$('comic').addEventListener('click',e=>{if(e.target.closest('button'))return;comicNext();});
 
 /* ---------- shop ---------- */
 let shopTab='hat',shopReturn='title';
@@ -1358,7 +1373,7 @@ function updateComic(dt){CM.t+=dt;const p=CM.list[CM.i];
 function fadeTo(cb){$('fade').classList.add('on');setTimeout(()=>{cb();$('fade').classList.remove('on');},300);}
 function startGame(){if(S.state==='play'||S.state==='trans')return;initAudio();
   if(!save.seenComic){playComic('intro',()=>{S.state='title';startGame();});return;}
-  S.choices=[];S.falls=0;S.time=0;S.coins=0;S.state='trans';updateOverlays();
+  S.choices=[];S.falls=0;S.time=0;S.coins=0;FR.done={};FR.last=-1e9;FR.pend=null;S.state='trans';updateOverlays();
   fadeTo(()=>{loadFloor(0);cam.yaw=.6;snapCam=true;S.state='play';showIntro();updateOverlays();canvas.focus();});}
 function showIntro(){setPt($('ipt'),S.floor===3?'chef':null);const F=FL[S.floor];$('ibig').textContent=S.floor===3?'Final floor':'Floor '+(S.floor+1);$('isub').textContent=F.name;
   const last=S.choices[S.choices.length-1];$('inew').textContent=last&&S.floor>0?'New hazard: '+HAZ[last.key].label:'';
@@ -1386,7 +1401,7 @@ function initArt(){document.querySelectorAll('img[data-art]').forEach(im=>{const
 const BGK={title:'title',shop:'shop',end:'victory'};
 let lastSt=null;
 function updateOverlays(){const st=S.state,inGame=st==='play'||st==='dialog'||st==='pause'||st==='trans';
-  showEl($('title'),st==='title');showEl($('pause'),st==='pause');showEl($('end'),st==='end');showEl($('shop'),st==='shop');showEl($('comic'),st==='comic');showEl($('vcut'),st==='cutin');if(st!=='end'){const vv=$('vvic');if(vv.classList.contains('on')){vv.classList.remove('on');try{vv.pause();}catch(_){}}}
+  showEl($('title'),st==='title');showEl($('pause'),st==='pause');showEl($('end'),st==='end');showEl($('shop'),st==='shop');showEl($('comic'),st==='comic');showEl($('vcut'),st==='cutin'&&CUT.k==='chef');showEl($('vfall'),st==='cutin'&&CUT.k==='fall');if(st!=='end'){const vv=$('vvic');if(vv.classList.contains('on')){vv.classList.remove('on');try{vv.pause();}catch(_){}}}
   $('hud').hidden=!inGame;
   showEl($('dlg'),st==='dialog'||(st==='pause'&&S.prev==='dialog'));$('pad').hidden=!(touchMode&&st==='play');
   const boss=inGame&&chef&&chef.state!=='wait';$('bossbar').hidden=!boss;
@@ -1413,7 +1428,7 @@ function updateHud(force){const fl=BR?'Bridge '+(BR.i+1)+'/3':S.floor===3?'Final
    VID.force (true/false) overrides the check for tests. */
 const VID={force:null,st:{}};
 function vidAllowed(){if(VID.force!=null)return VID.force;const c=navigator.connection;return !RM()&&Math.min(innerWidth,innerHeight)>=540&&!(c&&c.saveData)&&(navigator.hardwareConcurrency||8)>2;}
-const vidEl=k=>k==='chef'?$('vchef'):$('vvic');
+const vidEl=k=>k==='chef'?$('vchef'):k==='fall'?$('vfallv'):$('vvic');
 function vidLoad(k){if(VID.st[k]||!vidAllowed())return;const v=vidEl(k);VID.st[k]='loading';v.preload='auto';
   v.addEventListener('canplaythrough',()=>{if(VID.st[k]==='loading')VID.st[k]='ready';},{once:true});
   v.addEventListener('error',()=>{VID.st[k]='failed';},{once:true});v.src='assets/video/ffv_'+k+'.mp4';v.load();}
@@ -1427,11 +1442,23 @@ function vidPlay(k,onStart,onFail){const v=vidEl(k);if(!vidAllowed()||VID.st[k]=
 /* both clips fade to black in their last ~0.3 s: stop just before (Chef cut ends, victory holds its last bright frame) */
 const VCUT={chef:4.3,victory:7.45};
 function vidWatch(v,at,fn){const tick=()=>{if(v.currentTime>=at){fn();return;}if(!v.paused&&!v.ended)requestAnimationFrame(tick);};requestAnimationFrame(tick);v.onended=()=>fn();}
-const CUT={on:false,cb:null};
+const CUT={on:false,cb:null,k:'chef'};
+/* big-fall replay: after a fall of at least ~55% of the floor's height (min 8 m), never on bridges, once per floor, 90 s game-time cooldown.
+   Only plays if the clip is already buffered (preloaded when a floor starts); otherwise nothing happens. */
+const FR={pend:null,last:-1e9,done:{},cool:90};
+function fallMin(){return Math.max(8,FL[S.floor].topY*.55);}
+function bigFall(drop){if(BR||FR.pend||!save.fallReplays||drop<fallMin()||FR.done[S.floor]||S.time-FR.last<FR.cool)return false;
+  if(!vidAllowed()||VID.st.fall!=='ready')return false;FR.pend={t:.9,m:Math.round(drop)};return true;}
+function tickFall(dt){if(!FR.pend)return;FR.pend.t-=dt;if(FR.pend.t>0)return;const p=FR.pend;FR.pend=null;
+  if(S.state!=='play'||BR||VID.st.fall!=='ready')return;FR.done[S.floor]=true;FR.last=S.time;
+  $('fcm').textContent='-'+p.m+' m!';$('fcy').textContent=pick(FALL_YELL)+' '+pick(LAND_GRUMBLE);$('fcs').textContent='Falls: '+S.falls;
+  CUT.on=true;CUT.k='fall';CUT.cb=null;S.state='cutin';chargeSound(false);P.charging=false;P.charge=0;updateOverlays();
+  vidPlay('fall',v=>{if(!CUT.on||CUT.k!=='fall'){v.pause();return;}vidWatch(v,7.8,endCut);},()=>{if(CUT.on)endCut();});}
+function setFallReplays(on){save.fallReplays=on;persist();const b=$('bfall');b.textContent='Fall replays: '+(on?'on':'off');b.setAttribute('aria-pressed',String(on));}
 function chefEntrance(cb){if(!vidAllowed()||VID.st.chef==='failed'){cb();return;}
-  CUT.on=true;CUT.cb=cb;S.state='cutin';P.vx=P.vz=0;P.charging=false;P.charge=0;chargeSound(false);setPt($('vnpt'),'chef');updateOverlays();
+  CUT.on=true;CUT.k='chef';CUT.cb=cb;S.state='cutin';P.vx=P.vz=0;P.charging=false;P.charge=0;chargeSound(false);setPt($('vnpt'),'chef');updateOverlays();
   vidPlay('chef',v=>{if(!CUT.on){v.pause();return;}vidWatch(v,VCUT.chef,endCut);},()=>{if(CUT.on)endCut();});}
-function endCut(){if(!CUT.on)return;CUT.on=false;const v=$('vchef');try{v.pause();}catch(_){}v.onended=null;S.state='play';const cb=CUT.cb;CUT.cb=null;updateOverlays();if(cb)cb();}
+function endCut(){if(!CUT.on)return;CUT.on=false;const v=vidEl(CUT.k);try{v.pause();}catch(_){}v.onended=null;S.state='play';const cb=CUT.cb;CUT.cb=null;updateOverlays();if(cb)cb();}
 function endVideo(){const v=$('vvic');v.classList.remove('on');if(S.state!=='end')return;
   vidPlay('victory',vv=>{if(S.state!=='end'){vv.pause();return;}vv.classList.add('on');vidWatch(vv,VCUT.victory,()=>{vv.pause();try{if(vv.currentTime>VCUT.victory+.05)vv.currentTime=VCUT.victory-.1;}catch(_){}vv.onended=null;});},()=>{v.classList.remove('on');});}
 /* ---------- portraits + item art (assets/ui) ---------- */
@@ -1556,7 +1583,7 @@ function stepPlayer(dt){
   if(P.stun>0)P.stun-=dt;if(P.inv>0)P.inv-=dt;if(P.rag>0)P.rag-=dt;if(P.moodT>0)P.moodT-=dt;if(P.yawnT>0)P.yawnT-=dt;
   if(P.onGround&&!P.charging&&Math.hypot(P.vx,P.vz)<.4&&!input.mx&&!input.my){P.idleT+=dt;if(P.idleT>8&&P.yawnT<=0){P.yawnT=2.2;P.idleT=0;sfx.yawn();frankSay('*yaaawn*');}}else{P.idleT=0;P.yawnT=0;}
   if(P.y<base-10&&BR){bridgeFall();return;}
-  if(P.y<base-10){S.falls++;floatText(pick(TAUNTS),P.x,P.y+2,P.z);sfx.plop();placeFrank(0,base,0,P.face);setMood('angry',2.5);frankSay(pick(LAND_GRUMBLE));ragdoll(.8);return;}
+  if(P.y<base-10){S.falls++;bigFall(P.airTop-base);floatText(pick(TAUNTS),P.x,P.y+2,P.z);sfx.plop();placeFrank(0,base,0,P.face);setMood('angry',2.5);frankSay(pick(LAND_GRUMBLE));ragdoll(.8);return;}
   if(P.onGround&&P.sup&&P.sup.burner&&burnerHot(P.sup)===2)burn();
   if(P.onGround&&P.sup&&P.sup.roof)for(const zn of zones)if(zn.kind==='burner'&&burnerHot(zn)===2&&Math.hypot(P.x-zn.x,P.z-zn.z)<zn.r)burn();
   for(const d of dogs)if(P.inv<=0&&Math.hypot(P.x-d.x,P.z-d.z)<.75&&Math.abs(P.y-d.y)<.7){const a=Math.atan2(P.z-d.z,P.x-d.x);hit(Math.cos(a)*6,7,Math.sin(a)*6,sfx.bark);floatText('BORK',d.x,d.y+1,d.z);d.sit=.9;}
@@ -1569,7 +1596,7 @@ function stepPlayer(dt){
 function burn(){if(P.inv>0)return;const a=Math.atan2(P.z,P.x);hit(Math.cos(a)*3+rnd(-2,2),11,Math.sin(a)*3+rnd(-2,2),sfx.sizzle);frankSay('HOT HOT HOT!');for(let i=0;i<16;i++)part(P.x,P.y+.3,P.z,rnd(-2,2),rnd(2,6),rnd(-2,2),.6,i%2?0xff7a1a:0xffd23f,-3);}
 function onLand(s){const imp=P.airTop-s.y,drop=P.groundY-s.y;P.squash=.6;P.nodes.forEach((o,i)=>o.vy-=Math.min(6,imp*1.1)*i/NN);
   if(P.big&&imp>1)for(let i=0;i<12;i++)part(P.x,s.y+.1,P.z,rnd(-3,3),rnd(.5,2),rnd(-3,3),.5,trailColor(),10);
-  if(drop>5){S.falls++;sfx.plop();sfx.grumble();frankSay(pick(LAND_GRUMBLE));setMood('angry',2.5);shake=.2;dust(14);}else{sfx.land();dust(4);}
+  if(drop>5){S.falls++;bigFall(drop);sfx.plop();sfx.grumble();frankSay(pick(LAND_GRUMBLE));setMood('angry',2.5);shake=.2;dust(14);}else{sfx.land();dust(4);}
   if(drop>5||P.ragOnLand)ragdoll(drop>5?1.1:.7);P.big=false;P.ragOnLand=false;P.groundY=s.y;P.screamed=false;}
 
 /* ---------- world ---------- */
@@ -1577,7 +1604,7 @@ function stepWorld(dt){
   worldT+=dt;S.time+=dt;
   for(const s of surfs){if(s.move){const o=Math.sin(worldT*s.spd+s.ph)*s.move;s.dOff=o-s.off;s.off=o;s.mesh.rotation.y=-o;}else s.dOff=0;}
   for(const c of coins){if(c.s&&c.s.move){const a=(c.s.a0+c.s.a1)/2+c.s.off,r=(c.s.r0+c.s.r1)/2;c.g.position.x=r*Math.cos(a);c.g.position.z=r*Math.sin(a);}}
-  stepPlayer(dt);if(S.state!=='play')return;
+  stepPlayer(dt);tickFall(dt);if(S.state!=='play')return;
   if(BR){stepBridge(dt);return;}
   if(chef)stepChef(dt);
   updatePans(dt);
@@ -1831,7 +1858,7 @@ initArt();loadFloor(0);
 camera.position.set(0,14,60);cam.look.set(0,8,17);
 dropLetters();updateOverlays();
 requestAnimationFrame(t=>{last=t;frame(t);});
-window.__ff={video:v=>{VID.force=v;},VID,CUT,UIA,cam,sky:()=>({k:SKY.k,a:SKY.a,b:SKY.b,st:SKY.st.slice(),w:SU.wB.value,mix:SU.mixv.value,img:SU.tB.value&&SU.tB.value.image&&(SU.tB.value.image.src||'canvas'),fog:'#'+scene.fog.color.getHexString(),bg:'#'+skyScene.background.getHexString(),flat:FL[SKY.k].c.sky}),lettersSettled:()=>letters.every(g=>g.userData.off===0&&g.userData.vy===0&&g.userData.delay<=0),ART,drawMode:()=>DM.mode,renderShop,finish,comicNext,get CM(){return CM},S,P,save,loadBridge:i=>loadBridge(i),get BR(){return BR},openDialog,closeDialog,get chef(){return chef},loadFloor,startGame,surfs:()=>surfs,step:n=>{for(let i=0;i<n;i++)stepWorld(STEP);},openShop,playComic};
+window.__ff={FR,bigFall,video:v=>{VID.force=v;},VID,CUT,UIA,cam,sky:()=>({k:SKY.k,a:SKY.a,b:SKY.b,st:SKY.st.slice(),w:SU.wB.value,mix:SU.mixv.value,img:SU.tB.value&&SU.tB.value.image&&(SU.tB.value.image.src||'canvas'),fog:'#'+scene.fog.color.getHexString(),bg:'#'+skyScene.background.getHexString(),flat:FL[SKY.k].c.sky}),lettersSettled:()=>letters.every(g=>g.userData.off===0&&g.userData.vy===0&&g.userData.delay<=0),ART,drawMode:()=>DM.mode,renderShop,finish,comicNext,get CM(){return CM},S,P,save,loadBridge:i=>loadBridge(i),get BR(){return BR},openDialog,closeDialog,get chef(){return chef},loadFloor,startGame,surfs:()=>surfs,step:n=>{for(let i=0;i<n;i++)stepWorld(STEP);},openShop,playComic};
 })();
 </script>
 
