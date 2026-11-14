@@ -81,6 +81,11 @@ body.touch .meter{bottom:calc(var(--sb) + 176px)}
 .overlay.mid>.panel{margin:auto}
 .panel{width:min(460px,100%);padding:18px 20px 18px;text-align:center;box-sizing:border-box}
 .tagline{font-size:15px;line-height:1.4;margin:0 auto 12px;max-width:36ch}
+/* painted title lettering (Google Flow "LOGO3 Frankfurt Falls swirl", keyed from blue); replaces the 3D sausage letters when it loads */
+#tlogo{position:absolute;left:50%;top:max(10px,env(safe-area-inset-top));transform:translateX(-50%);width:min(88vw,62vh,560px);height:auto;pointer-events:none;opacity:0;filter:drop-shadow(0 8px 20px rgba(0,0,0,.45));transition:opacity .4s}
+body.tlogo-ok #tlogo{opacity:1}
+@media (min-width:900px) and (min-height:560px){#tlogo{left:max(3vw,env(safe-area-inset-left));transform:rotate(-2deg);width:min(42vw,70vh,620px)}}
+@media (orientation:landscape) and (max-height:559px){#tlogo{left:max(2vw,env(safe-area-inset-left));transform:none;width:min(44vw,78vh)}}
 .controls{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;text-align:left;font-size:14px;line-height:1.5;margin:0 auto 14px;max-width:370px}
 .controls dt{font-family:var(--display);font-size:14px;padding-top:1px}
 .controls dd{margin:0;font-weight:700}
@@ -386,6 +391,7 @@ body.touch .wpn{bottom:calc(var(--sb) + 62px);max-width:calc(100% - 236px - var(
 </div>
 
 <div class="overlay" id="title" role="dialog" aria-label="Frankfurt Falls">
+  <img id="tlogo" src="assets/ff_logo.webp" alt="" width="1100" height="632" decoding="async" onload="document.body.classList.add('tlogo-ok')" onerror="this.remove()">
   <div class="panel card">
     <h1 class="sr">Frankfurt Falls</h1>
     <p class="tagline">Chef Le Grill stole Frank's buddies. Climb his tower, survive the gatekeepers' would-you-rathers, and stomp his hat.</p>
@@ -1829,7 +1835,7 @@ function ghostWalls(t){const cx=camera.position.x,cz=camera.position.z,cy=camera
 /* ---------- loop ---------- */
 /* what the canvas draws: 'world' = full 3D, 'logo' = only the sausage sign (layer 1) over the title art, 'frank' = only Frank over the shop art, 'none' = transparent (art fills the screen) */
 const DM={mode:null,dip:false};
-function drawModeFor(st){if(st==='title')return artOK('title')?'logo':'world';if(st==='shop')return artOK('shop')?'frank':'world';if(st==='end')return artOK('victory')?'none':'world';if(st==='comic')return panelArt()?'none':'world';return 'world';}
+function drawModeFor(st){if(st==='title')return artOK('title')?(document.body.classList.contains('tlogo-ok')?'none':'logo'):'world';if(st==='shop')return artOK('shop')?'frank':'world';if(st==='end')return artOK('victory')?'none':'world';if(st==='comic')return panelArt()?'none':'world';return 'world';}
 function drawScene(mode){renderer.clear();
   if(mode==='world'){if(S.state!=='comic'){updateSky();scene.background=null;renderer.render(skyScene,camera);}effect.render(scene,camera);if(S.state!=='comic'&&S.state!=='title'){if(S.state==='play'||S.state==='dialog'||S.state==='pause')renderer.render(xrayScene,camera);effect.render(frankScene,camera);}}
   else if(mode==='logo'){const bg=scene.background;scene.background=null;camera.layers.set(1);effect.render(scene,camera);camera.layers.set(0);scene.background=bg;}

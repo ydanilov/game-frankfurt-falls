@@ -15,7 +15,7 @@ const IMGS = ['ff_title', 'ff_shop', 'ff_comic1', 'ff_comic2', 'ff_comic3', 'ff_
   await page.waitForFunction(() => window.__ff.sky().st[0] === 'ready', null, { timeout: 30000 }).catch(() => {});
   check(await page.evaluate(() => window.__ff.sky().st[0] === 'ready'), 'floor 1 sky panorama loaded at boot');
   check(await page.evaluate(() => document.getElementById('bg-title').classList.contains('on')), 'title backdrop on');
-  check(await page.evaluate(() => window.__ff.drawMode()) === 'logo', 'canvas draws only the logo over title art');
+  check(['logo', 'none'].includes(await page.evaluate(() => window.__ff.drawMode())), 'canvas draws only the logo (or nothing, with the painted logo) over title art');
   check(await page.evaluate(() => localStorage.getItem('frankfurtFalls.save') !== undefined && typeof window.__ff.loadBridge === 'function'), 'debug hooks present');
   await shot(page, 'boot_title_desktop');
   check(errs.length === 0, 'no console errors' + (errs.length ? ': ' + errs.join(' | ') : ''));
